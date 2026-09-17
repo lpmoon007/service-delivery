@@ -125,7 +125,9 @@ needed, so the engine can be worked on offline.
 1. Copy `.env.example` to `.env.local` and fill in
    `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. The URL is already there.
 2. Run `supabase/migrations/0001_init.sql` in the SQL editor. Tables, policies,
-   the P&L view.
+   the P&L view. If your database was created from the very first version of
+   that file, also run `supabase/migrations/0002_task_role_vocabulary.sql`; it
+   is idempotent, so running it on a current database is a no-op.
 3. Run `supabase/seed/0002_seed.sql`. One program, five engagements, 205 tasks,
    30 resource slots, 60 cost lines. Idempotent, so re-running after a template
    change re-dates tasks without resetting a status a contractor already set.
