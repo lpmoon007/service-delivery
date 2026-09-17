@@ -1,0 +1,255 @@
+/**
+ * The generation engine.
+ *
+ * One program template plus one set of engagement parameters produces the task
+ * timeline, the material quantities, the required resource blocks and both
+ * run-of-show tracks. Nothing here is program-specific: Build A Dream is data.
+ *
+ * Validated against two real events. See generate.test.ts.
+ */
+
+import { evalBoolean, evalNumber, type Context } from "./expr";
+import type {
+  EngagementParams,
+  GeneratedQuantity,
+  GeneratedResource,
+  GeneratedTask,
+  Program,
+  RunOfShow,
+  RunOfShowOverrides,
+  ScheduledBeneficiaryStep,
+  ScheduledStep,
+} from "./types";
+
+/** Minutes from midnight for an "HH:MM" string. */
+export function parseTime(hhmm: string): number {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
+  if (!m) throw new Error(`bad time ${JSON.stringify(hhmm)}, expected HH:MM`);
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) throw new Error(`time out of range: ${hhmm}`);
+  return h * 60 + min;
+}
+
+/** "4:30 PM" for 990. Wraps past midnight rather than throwing. */
+export function formatTime(mins: number): string {
+  const m = ((mins % 1440) + 1440) % 1440;
+  const h24 = Math.floor(m / 60);
+  const mm = m % 60;
+  const period = h24 < 12 ? "AM" : "PM";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(mm).padStart(2, "0")} ${period}`;
+}
+
+/**
+ * Build the evaluation context: the engagement's own numeric and boolean
+ * parameters, plus derived values the template refers to.
+ */
+export function buildContext(params: EngagementParams): Context {
+  // Null prototype: nothing inherited can be reachable as an identifier.
+  const ctx: Context = Object.create(null) as Context;
+  for (const [k, v] of Object.entries(params)) {
+    if (typeof v === "number" || typeof v === "boolean") ctx[k] = v;
+  }
+  // Derived: one bicycle per child plus two spares.
+  ctx.bikes = params.beneficiaries + 2;
+  return ctx;
+}
+
+/** How long the beneficiaries stay after the reveal, in minutes. */
+const REVEAL_TO_DEPARTURE = 30;
+
+/**
+ * Compute both tracks.
+ *
+ * If the engagement has a hard beneficiary departure deadline, the reveal is
+ * pinned at `deadline - 30` and every pre-reveal step is laid out backward from
+ * it. This is the rule stated in prose on the Ledgebrook run of show: the
+ * children being gone by 5:00 fixes the reveal at 4:30 and sets the length of
+ * everything ahead of it.
+ *
+ * With no deadline the schedule runs forward from participant arrival.
+ */
+export function computeRunOfShow(
+  program: Program,
+  params: EngagementParams,
+  overrides: RunOfShowOverrides = {},
+): RunOfShow {
+  const skip = new Set(overrides.skip ?? []);
+  const durations = overrides.durations ?? {};
+
+  const steps = program.run_of_show.main_track
+    .filter((s) => !skip.has(s.id))
+    .map((s) => ({ ...s, duration: durations[s.id] ?? s.duration }));
+
+  const anchorIdx = steps.findIndex((s) => s.is_anchor);
+  if (anchorIdx === -1) throw new Error(`program ${program.code} has no anchor step`);
+
+  const preAnchor = steps.slice(0, anchorIdx).filter((s) => !s.before_start);
+  const preAnchorMinutes = preAnchor.reduce((n, s) => n + s.duration, 0);
+
+  let start: number;
+  let reveal: number;
+  let basis: string;
+  const anchoredBackward = Boolean(params.beneficiary_depart_by);
+
+  if (params.beneficiary_depart_by) {
+    reveal = parseTime(params.beneficiary_depart_by) - REVEAL_TO_DEPARTURE;
+    start = reveal - preAnchorMinutes;
+    basis =
+      `beneficiaries depart by ${formatTime(parseTime(params.beneficiary_depart_by))}, ` +
+      `so the reveal is fixed at ${formatTime(reveal)} and everything before it is ` +
+      `computed backward`;
+  } else {
+    start = parseTime(params.event_start);
+    reveal = start + preAnchorMinutes;
+    basis =
+      `no hard departure deadline, so the schedule runs forward from arrival at ` +
+      `${formatTime(start)} and the reveal falls at ${formatTime(reveal)}`;
+  }
+
+  const main: ScheduledStep[] = [];
+  let cursor = start;
+  for (const s of steps) {
+    if (s.before_start) {
+      main.push({ ...s, start: start - s.duration, end: start });
+      continue;
+    }
+    main.push({ ...s, start: cursor, end: cursor + s.duration });
+    cursor += s.duration;
+  }
+
+  const beneficiary: ScheduledBeneficiaryStep[] = program.run_of_show.beneficiary_track.map(
+    (s) => {
+      if (s.offset_from_reveal <= -1440) return { ...s, start: null, end: null };
+      const st = reveal + s.offset_from_reveal;
+      return { ...s, start: st, end: s.duration ? st + s.duration : null };
+    },
+  );
+
+  const scheduled = main.filter((s) => !s.before_start && !s.after_close);
+  const close = scheduled.length ? scheduled[scheduled.length - 1]!.end : start;
+
+  return { start, reveal, close, basis, anchoredBackward, main, beneficiary };
+}
+
+function slug(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
+
+function addDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) throw new Error(`bad date ${iso}, expected YYYY-MM-DD`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Generate the task list. Conditional tasks are dropped when their condition is
+ * false, which is how "no mechanics needed, one person is coming" works.
+ */
+export function generateTasks(
+  program: Program,
+  params: EngagementParams,
+  deliveryDate: string,
+): GeneratedTask[] {
+  const ctx = buildContext(params);
+  const out: GeneratedTask[] = [];
+  for (const rule of program.tasks) {
+    if (rule.condition && !evalBoolean(rule.condition, ctx)) continue;
+    out.push({
+      ...rule,
+      sourceKey: `${program.code}:${slug(rule.title)}`,
+      dueDate: addDays(deliveryDate, rule.offset),
+    });
+  }
+  out.sort((a, b) => (a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : a.phase.localeCompare(b.phase)));
+
+  const seen = new Set<string>();
+  for (const t of out) {
+    if (seen.has(t.sourceKey)) throw new Error(`duplicate task key ${t.sourceKey} in ${program.code}`);
+    seen.add(t.sourceKey);
+  }
+  return out;
+}
+
+export function computeQuantities(program: Program, params: EngagementParams): GeneratedQuantity[] {
+  const ctx = buildContext(params);
+  return program.quantities.map((q) => ({
+    item: q.item,
+    qty: evalNumber(q.formula, ctx),
+    basis: q.basis,
+    confidence: q.confidence ?? "high",
+    note: q.note,
+  }));
+}
+
+/**
+ * Resolve which resource blocks this engagement needs, and how much of each.
+ * Vehicle rules are first-match-wins, so 13 children get a limo and 108 get
+ * three buses from the same template.
+ */
+export function resolveResources(program: Program, params: EngagementParams): GeneratedResource[] {
+  const ctx = buildContext(params);
+  const out: GeneratedResource[] = [];
+  for (const rule of program.resources) {
+    if (!rule.always && rule.condition && !evalBoolean(rule.condition, ctx)) continue;
+    if (!rule.always && !rule.condition) continue;
+
+    let count: number | null = rule.count_formula ? evalNumber(rule.count_formula, ctx) : null;
+    let vehicle: string | null = null;
+    for (const vr of rule.vehicle_rule ?? []) {
+      if (evalBoolean(vr.when, ctx)) {
+        vehicle = vr.vehicle;
+        count = evalNumber(vr.count_formula, ctx);
+        break;
+      }
+    }
+    out.push({
+      key: rule.key,
+      label: rule.label,
+      count,
+      vehicle,
+      fields: rule.fields ?? [],
+      note: rule.note,
+    });
+  }
+  return out;
+}
+
+export interface GeneratedEngagement {
+  program: Program;
+  params: EngagementParams;
+  deliveryDate: string;
+  runOfShow: RunOfShow;
+  tasks: GeneratedTask[];
+  quantities: GeneratedQuantity[];
+  resources: GeneratedResource[];
+}
+
+/** Everything an engagement needs, from one template and one parameter set. */
+export function generateEngagement(
+  program: Program,
+  params: EngagementParams,
+  deliveryDate: string,
+  overrides: RunOfShowOverrides = {},
+): GeneratedEngagement {
+  for (const p of program.parameters) {
+    if (p.required && params[p.key] === undefined) {
+      throw new Error(`engagement is missing required parameter "${p.key}" (${p.label})`);
+    }
+  }
+  return {
+    program,
+    params,
+    deliveryDate,
+    runOfShow: computeRunOfShow(program, params, overrides),
+    tasks: generateTasks(program, params, deliveryDate),
+    quantities: computeQuantities(program, params),
+    resources: resolveResources(program, params),
+  };
+}

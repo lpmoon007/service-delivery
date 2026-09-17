@@ -1,0 +1,26 @@
+{
+  "name": "service-delivery",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Be Legendary service delivery: program templates that generate engagement tasks, reverse timelines and the logistics and coordination doc.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.3.5",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.1",
+    "@types/react": "19.1.13",
+    "@types/react-dom": "19.1.9",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  }
+}

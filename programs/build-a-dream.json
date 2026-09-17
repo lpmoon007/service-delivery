@@ -1,0 +1,204 @@
+{
+  "code": "BAD",
+  "name": "Build A Dream",
+  "family": "charity-team-build",
+  "summary": "Teams build bicycles, children are revealed as the recipients, teams present and fit the bikes, then a facilitated debrief.",
+  "source": "Modeled from Ledgebrook 2026-09-16 run of show and DeVry Building a Dream 2011-12-09 agenda.",
+
+  "parameters": [
+    { "key": "participants",        "label": "Participants",                  "type": "int",  "required": true },
+    { "key": "teams",               "label": "Teams / build tables",          "type": "int",  "required": true },
+    { "key": "beneficiaries",       "label": "Children receiving bicycles",   "type": "int",  "required": true },
+    { "key": "beneficiary_org",     "label": "Beneficiary organization",      "type": "text", "required": true },
+    { "key": "beneficiary_minors",  "label": "Beneficiaries are minors",      "type": "bool", "default": true },
+    { "key": "beneficiary_travels", "label": "Beneficiaries travel to venue", "type": "bool", "default": true },
+    { "key": "travel_distance_mi",  "label": "Distance, beneficiary site to venue (mi)", "type": "number", "required": false },
+    { "key": "bikes_go_home_same_day", "label": "Children take bicycles home from the venue", "type": "bool", "default": false },
+    { "key": "event_start",         "label": "Participant arrival time",      "type": "time", "required": true },
+    { "key": "beneficiary_depart_by", "label": "Hard deadline: children must depart by", "type": "time", "required": false }
+  ],
+
+  "quantities": [
+    { "item": "Bicycles",                  "formula": "beneficiaries + 2", "basis": "one per child plus two spares", "confidence": "high", "note": "DeVry: 108 children, 110 bikes." },
+    { "item": "Helmets",                   "formula": "beneficiaries",     "basis": "one per child", "confidence": "high" },
+    { "item": "Locks",                     "formula": "beneficiaries",     "basis": "one per child", "confidence": "high" },
+    { "item": "Backpacks",                 "formula": "beneficiaries",     "basis": "one per child", "confidence": "high" },
+    { "item": "Build tables",              "formula": "teams",             "basis": "one per team", "confidence": "high", "note": "Ledgebrook: 13 teams, 13 build tables." },
+    { "item": "Tool sets",                 "formula": "teams",             "basis": "one per build table", "confidence": "high", "note": "Ledgebrook: one tool set per table." },
+    { "item": "Floor pumps",               "formula": "max(2, ceil(teams / 6))", "basis": "facilitator station", "confidence": "low", "note": "Ledgebrook says pumps at the facilitator station without a count. Confirm." },
+    { "item": "Team number stickers",      "formula": "teams",             "basis": "one per team", "confidence": "high" },
+    { "item": "Client brief sheets",       "formula": "participants",      "basis": "one per participant", "confidence": "medium", "note": "DeVry shipped 110 brief sheets. Confirm whether this is per participant or per team." },
+    { "item": "Holding-room activity kits", "formula": "beneficiaries",    "basis": "one per child", "confidence": "medium", "note": "DeVry used coloring DVDs; Ledgebrook used activities, snacks and drinks." },
+    { "item": "On-site technicians",       "formula": "max(1, ceil(bikes / 30))", "basis": "inspection and correction throughput", "confidence": "low", "note": "DeVry: 4 mechanics for 110 bikes. Ledgebrook: 1 technician for 13. Confirm the ratio." }
+  ],
+
+  "resources": [
+    {
+      "key": "venue",
+      "label": "Venue",
+      "always": true,
+      "fields": ["name", "address", "contact_name", "contact_title", "contact_phone", "room", "av_notes"]
+    },
+    {
+      "key": "beneficiary_site",
+      "label": "Beneficiary organization",
+      "always": true,
+      "fields": ["org_name", "address", "contact_name", "contact_phone", "contact_email", "chaperone_count", "consent_status"]
+    },
+    {
+      "key": "transportation",
+      "label": "Beneficiary transportation",
+      "condition": "beneficiary_travels",
+      "vehicle_rule": [
+        { "when": "beneficiaries <= 8",  "vehicle": "Limousine or SUV", "count_formula": "1" },
+        { "when": "beneficiaries <= 20", "vehicle": "Limousine or passenger van", "count_formula": "ceil(beneficiaries / 14)" },
+        { "when": "beneficiaries > 20",  "vehicle": "School or charter bus", "count_formula": "ceil(beneficiaries / 40)" }
+      ],
+      "fields": ["vendor", "vendor_phone", "confirmation_number", "vehicle_type", "vehicle_count", "pickup_time", "distance_mi", "cost"],
+      "note": "Ledgebrook used a limousine for 13 children and it was left off the run of show entirely. DeVry used 3 buses plus a U-Haul van for materials."
+    },
+    {
+      "key": "materials_transport",
+      "label": "Materials vehicle",
+      "condition": "beneficiaries > 20",
+      "fields": ["vendor", "confirmation_number", "cost"],
+      "note": "DeVry booked a U-Haul van for materials in addition to beneficiary buses."
+    },
+    {
+      "key": "technicians",
+      "label": "On-site technicians",
+      "always": true,
+      "count_formula": "max(1, ceil((beneficiaries + 2) / 30))",
+      "fields": ["names", "arrival_time", "location", "contact", "day_rate", "cost"]
+    },
+    {
+      "key": "post_event_delivery",
+      "label": "Bicycle delivery to beneficiary site",
+      "condition": "not bikes_go_home_same_day",
+      "fields": ["vendor", "depart_time", "arrive_time", "destination", "cost"],
+      "note": "Ledgebrook: bicycles inspected at the venue, then delivered to the club by approximately 7:00 PM for parent pickup."
+    },
+    {
+      "key": "photography",
+      "label": "Photography",
+      "always": true,
+      "fields": ["photographer", "contact", "cost"],
+      "note": "Both documents call for roaming photography and a group photograph."
+    }
+  ],
+
+  "run_of_show": {
+    "anchor": "reveal",
+    "anchor_rule": "If beneficiary_depart_by is set, reveal = beneficiary_depart_by minus 30 minutes. Otherwise reveal = event_start plus the sum of the pre-reveal main-track durations.",
+    "main_track": [
+      { "id": "setup",            "label": "Setup",                                  "duration": 75, "before_start": true,
+        "details": ["Bicycles staged", "Build tables with one tool set each", "Pumps at the facilitator station", "Theater seating for the open and close", "Audio and video check"] },
+      { "id": "arrival",          "label": "Participants arrive and are seated",     "duration": 15,
+        "details": ["Teams pre-assigned and mixed across departments, not self-selected"] },
+      { "id": "opening",          "label": "Opening remarks: client executive",      "duration": 5,
+        "details": ["Why the build closes the event", "Hands off to James Carter"] },
+      { "id": "content",          "label": "Be Legendary content block",             "duration": 25,
+        "details": ["Awareness: Moonwalking Bear", "Beliefs: Shreddies", "Who Are You, three rounds"] },
+      { "id": "build",            "label": "Build the bicycles",                     "duration": 30,
+        "details": ["Build instructions and client brief sheet issued", "No mention of the children"] },
+      { "id": "reveal",           "label": "The Reveal",                             "duration": 5, "is_anchor": true,
+        "details": ["Quality inspection framing, then the children enter"] },
+      { "id": "present",          "label": "Teams present the bikes, adjust fit, ride with the children", "duration": 15,
+        "details": ["Roaming photography throughout"] },
+      { "id": "photo",            "label": "Group photograph",                       "duration": 5,
+        "details": ["This is the photograph the event is remembered by"] },
+      { "id": "tunnel",           "label": "Human tunnel",                           "duration": 3,
+        "details": ["Participants form the tunnel, children run out through it"] },
+      { "id": "reset",            "label": "Room reset for the debrief",             "duration": 4,
+        "details": ["Build tables cleared, seating pulled in"] },
+      { "id": "debrief",          "label": "Debrief, facilitated by James Carter",   "duration": 20,
+        "details": ["Open with: who has the first bike story?", "What happened, so what, now what"] },
+      { "id": "challenge",        "label": "30-Day Challenge",                       "duration": 4,
+        "details": ["Voluntary, SMS based, no app", "Custom client page and QR code on screen"] },
+      { "id": "close",            "label": "Close: client executive",                "duration": 4,
+        "details": ["Connects the session to the client's definition of leadership"] },
+      { "id": "inspection",       "label": "Technician inspection",                  "duration": 60, "after_close": true,
+        "details": ["Every bicycle inspected and corrected at the venue"] }
+    ],
+    "beneficiary_track": [
+      { "id": "confirm",      "label": "Beneficiary org confirms departure, chaperones and consent", "offset_from_reveal": -1440 },
+      { "id": "depart_origin","label": "Children depart the beneficiary site",        "offset_from_reveal": -75 },
+      { "id": "arrive_venue", "label": "Children arrive and go directly to the holding room, out of sight of the main room", "offset_from_reveal": -45 },
+      { "id": "holding",      "label": "Chaperones and support staff run activities, snacks and drinks", "offset_from_reveal": -45, "duration": 30 },
+      { "id": "sizing",       "label": "Sizing and helmet fitting",                   "offset_from_reveal": -15 },
+      { "id": "send_rep",     "label": "One participant from each team is sent to the holding room to meet their child", "offset_from_reveal": -15 },
+      { "id": "match",        "label": "Participants matched with children; children briefed and lined up outside the room", "offset_from_reveal": -10, "duration": 10 },
+      { "id": "enter",        "label": "Children enter with their team representative", "offset_from_reveal": 0 },
+      { "id": "gear",         "label": "Helmets, locks and backpacks presented with the bicycles", "offset_from_reveal": 10 },
+      { "id": "return",       "label": "Children returned to their chaperones",       "offset_from_reveal": 28 },
+      { "id": "depart_venue", "label": "Children depart the venue",                   "offset_from_reveal": 30 }
+    ]
+  },
+
+  "tasks": [
+    { "phase": "1. Lock",    "title": "Signed agreement / SOW returned",                    "offset": -30, "role": "JC" },
+    { "phase": "1. Lock",    "title": "Deposit invoice sent",                                "offset": -30, "role": "JC" },
+    { "phase": "1. Lock",    "title": "W-9, COI + vendor onboarding submitted",              "offset": -25, "role": "JC" },
+    { "phase": "1. Lock",    "title": "Deposit received",                                    "offset": -21, "role": "JC" },
+    { "phase": "1. Lock",    "title": "Travel booked for facilitation team",                  "offset": -21, "role": "JC" },
+
+    { "phase": "2. Design",  "title": "Sponsor alignment call held (objectives + success measures)", "offset": -21, "role": "JC" },
+    { "phase": "2. Design",  "title": "Confirm participant count, team count and room layout", "offset": -21, "role": "JC" },
+    { "phase": "2. Design",  "title": "Beneficiary organization identified and agreed",        "offset": -21, "role": "JC" },
+    { "phase": "2. Design",  "title": "Beneficiary count confirmed with the organization",     "offset": -18, "role": "coordinator" },
+    { "phase": "2. Design",  "title": "Chaperone count and parental consent confirmed",        "offset": -14, "role": "coordinator", "condition": "beneficiary_minors" },
+    { "phase": "2. Design",  "title": "Child sizes collected for bicycle and helmet fit",      "offset": -14, "role": "coordinator" },
+    { "phase": "2. Design",  "title": "Attendee list + roles received",                        "offset": -14, "role": "JC" },
+    { "phase": "2. Design",  "title": "Confirm hard departure deadline for the children",      "offset": -14, "role": "coordinator",
+      "note": "This single constraint fixes the reveal time and therefore every time before it." },
+
+    { "phase": "3. Produce", "title": "Bicycles ordered and ship date confirmed",              "offset": -21, "role": "logistics" },
+    { "phase": "3. Produce", "title": "Helmets, locks and backpacks ordered",                  "offset": -21, "role": "logistics" },
+    { "phase": "3. Produce", "title": "Beneficiary transportation booked, confirmation number recorded", "offset": -14, "role": "logistics", "condition": "beneficiary_travels",
+      "note": "Left off the Ledgebrook run of show. The limousine existed but appeared in no document." },
+    { "phase": "3. Produce", "title": "Materials vehicle booked",                              "offset": -14, "role": "logistics", "condition": "beneficiaries > 20" },
+    { "phase": "3. Produce", "title": "On-site technicians booked and day rate agreed",        "offset": -14, "role": "logistics" },
+    { "phase": "3. Produce", "title": "Post-event bicycle delivery to beneficiary site arranged", "offset": -14, "role": "logistics", "condition": "not bikes_go_home_same_day" },
+    { "phase": "3. Produce", "title": "Photographer booked",                                   "offset": -14, "role": "logistics" },
+    { "phase": "3. Produce", "title": "Venue AV, room layout and holding room confirmed in writing", "offset": -10, "role": "logistics",
+      "note": "The holding room must be out of sight of the main room or the reveal is spoiled." },
+    { "phase": "3. Produce", "title": "Brief sheets and team number stickers printed",         "offset": -10, "role": "logistics" },
+    { "phase": "3. Produce", "title": "Holding-room activity kits prepared",                   "offset": -10, "role": "coordinator" },
+    { "phase": "3. Produce", "title": "Client challenge page live and QR code tested",         "offset": -7,  "role": "JC" },
+    { "phase": "3. Produce", "title": "Materials shipped; tracking number recorded",           "offset": -7,  "role": "logistics" },
+    { "phase": "3. Produce", "title": "Run of show approved by sponsor",                       "offset": -7,  "role": "JC" },
+    { "phase": "3. Produce", "title": "Content videos tested on the delivery device",          "offset": -5,  "role": "JC" },
+    { "phase": "3. Produce", "title": "Coordination doc issued to all contractors",            "offset": -5,  "role": "JC" },
+    { "phase": "3. Produce", "title": "Materials arrival confirmed at venue",                  "offset": -2,  "role": "logistics" },
+    { "phase": "3. Produce", "title": "Transportation reconfirmed with vendor",                "offset": -1,  "role": "logistics", "condition": "beneficiary_travels" },
+    { "phase": "3. Produce", "title": "Beneficiary org reconfirmed: departure time, chaperones, headcount", "offset": -1, "role": "coordinator" },
+
+    { "phase": "4. Deliver", "title": "Delivery day",                                          "offset": 0,   "role": "all" },
+    { "phase": "4. Deliver", "title": "Bicycle inspection complete at venue",                  "offset": 0,   "role": "technician" },
+    { "phase": "4. Deliver", "title": "Bicycles delivered to beneficiary site",                "offset": 0,   "role": "logistics", "condition": "not bikes_go_home_same_day" },
+
+    { "phase": "5. Close",   "title": "Thank-you + recap email to sponsor",                    "offset": 2,   "role": "JC" },
+    { "phase": "5. Close",   "title": "Thank-you to the beneficiary organization",             "offset": 2,   "role": "coordinator" },
+    { "phase": "5. Close",   "title": "Photographs delivered to client",                       "offset": 3,   "role": "logistics" },
+    { "phase": "5. Close",   "title": "Final invoice sent",                                    "offset": 3,   "role": "JC" },
+    { "phase": "5. Close",   "title": "Contractor invoices received and reconciled",           "offset": 7,   "role": "JC" },
+    { "phase": "5. Close",   "title": "Event P&L closed",                                      "offset": 10,  "role": "JC" },
+    { "phase": "5. Close",   "title": "Debrief call with sponsor held",                         "offset": 14,  "role": "JC" },
+    { "phase": "5. Close",   "title": "Final payment received",                                 "offset": 30,  "role": "JC" }
+  ],
+
+  "cost_lines": [
+    { "key": "bicycles",       "label": "Bicycles",                     "visibility": "contractor" },
+    { "key": "gear",           "label": "Helmets, locks, backpacks",    "visibility": "contractor" },
+    { "key": "print",          "label": "Printed materials",            "visibility": "contractor" },
+    { "key": "freight",        "label": "Freight and shipping",         "visibility": "contractor" },
+    { "key": "transportation", "label": "Beneficiary transportation",   "visibility": "contractor" },
+    { "key": "technicians",    "label": "On-site technicians",          "visibility": "contractor" },
+    { "key": "photography",    "label": "Photography",                  "visibility": "contractor" },
+    { "key": "venue_av",       "label": "Venue and AV charges",         "visibility": "contractor" },
+    { "key": "travel",         "label": "Facilitation team travel",     "visibility": "contractor" },
+    { "key": "contractor_fees","label": "Contractor fees",              "visibility": "contractor" },
+    { "key": "client_fee",     "label": "Client fee",                   "visibility": "owner" },
+    { "key": "margin",         "label": "Gross margin",                 "visibility": "owner", "computed": "client_fee - sum(all contractor-visible lines)" }
+  ]
+}
