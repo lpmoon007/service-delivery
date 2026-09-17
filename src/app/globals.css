@@ -55,3 +55,14 @@ ul.cards a{font-weight:bold;text-decoration:none;font-size:16px}
   tbody th{width:auto}
   td.t{width:auto}
 }
+
+form.stack{display:flex;flex-direction:column;gap:8px;max-width:380px}
+form.stack label{font-weight:bold;font-size:13px}
+form.stack input{font:inherit;padding:9px 11px;border:1px solid var(--line);
+  border-radius:5px;background:var(--paper);color:var(--ink)}
+form.stack input:focus-visible{outline:2px solid var(--navy);outline-offset:1px}
+form.stack button{font:inherit;font-weight:bold;padding:10px 14px;border:0;
+  border-radius:5px;background:var(--navy);color:var(--paper);cursor:pointer}
+form.stack button:disabled{opacity:.6;cursor:default}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;
+  background:var(--band);padding:1px 5px;border-radius:3px}

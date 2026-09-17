@@ -135,7 +135,11 @@ create table engagement_tasks (
   title         text not null,
   offset_days   integer not null,
   due_date      date not null,
-  role          app_role not null,
+  -- Who does the task, in the template's own vocabulary. This is NOT app_role:
+  -- 'JC' and 'all' describe a job on the delivery, not a permission level.
+  -- The person actually responsible is `assignee`.
+  role          text not null
+                check (role in ('JC', 'coordinator', 'logistics', 'technician', 'all')),
   assignee      uuid references profiles on delete set null,
   status        task_status not null default 'not_started',
   note          text,

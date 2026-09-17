@@ -1,31 +1,51 @@
 import Link from "next/link";
 
-import { KNOWN_ENGAGEMENTS } from "@/fixtures/registry";
+import { listEngagements } from "@/lib/db";
+import { isSupabaseConfigured } from "@/lib/env";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const engagements = await listEngagements();
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
     <main>
       <h1>Service Delivery</h1>
       <p className="sub">
         Program templates that generate tasks, reverse timelines and the coordination doc.
       </p>
-      <p className="band">
-        Pre-database preview. These two engagements come from{" "}
-        <code>src/fixtures/known-events.ts</code> and are the regression fixtures the engine is
-        tested against. Once Supabase is wired, this list comes from the database.
-      </p>
+
+      {!isSupabaseConfigured && (
+        <p className="band">
+          Fixture-preview mode: no database configured, so these come from{" "}
+          <code>src/fixtures/known-events.ts</code>, the regression fixtures the engine is
+          tested against.
+        </p>
+      )}
+
       <h2>Engagements</h2>
-      <ul className="cards">
-        {KNOWN_ENGAGEMENTS.map((e) => (
-          <li key={e.slug}>
-            <Link href={`/engagements/${e.slug}`}>{e.params.client}</Link>
-            <p className="det">
-              {e.label} &middot; {e.params.beneficiaries} beneficiaries &middot;{" "}
-              {e.params.participants} participants
-            </p>
-          </li>
-        ))}
-      </ul>
+      {engagements.length === 0 ? (
+        <p className="band">
+          Nothing here yet. Either no engagements exist, or none are assigned to you.
+        </p>
+      ) : (
+        <ul className="cards">
+          {engagements.map((e) => (
+            <li key={e.id}>
+              <Link href={`/engagements/${e.id}`}>{e.clientName}</Link>
+              <p className="det">
+                {e.programName} &middot; {e.deliveryDate}
+                {e.deliveryDate < today && " (delivered)"}
+                {e.overdueTasks !== null && e.overdueTasks > 0 && (
+                  <> &middot; <strong>{e.overdueTasks} overdue</strong></>
+                )}
+                {e.openTasks !== null && <> &middot; {e.openTasks} open</>}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }
