@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CoordinationDoc } from "@/components/CoordinationDoc";
@@ -41,11 +42,22 @@ export default async function EngagementPage({
   }
 
   return (
-    <CoordinationDoc
-      engagement={detail.generated}
-      resourceValues={detail.resourceValues}
-      costs={costs}
-      audience={profile?.role === "owner" ? "owner" : "contractor"}
-    />
+    <>
+      <nav className="crumbs no-print">
+        <Link href="/">Engagements</Link> / <Link href={`/engagements/${id}/work`}>Tasks</Link>
+        {profile?.role === "owner" && (
+          <>
+            {" / "}
+            <Link href={`/engagements/${id}/edit`}>Edit</Link>
+          </>
+        )}
+      </nav>
+      <CoordinationDoc
+        engagement={detail.generated}
+        resourceValues={detail.resourceValues}
+        costs={costs}
+        audience={profile?.role === "owner" ? "owner" : "contractor"}
+      />
+    </>
   );
 }

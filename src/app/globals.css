@@ -66,3 +66,47 @@ form.stack button{font:inherit;font-weight:bold;padding:10px 14px;border:0;
 form.stack button:disabled{opacity:.6;cursor:default}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;
   background:var(--band);padding:1px 5px;border-radius:3px}
+
+/* ------------------------------------------------ editable views ------- */
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:0 0 12px;margin:0 0 20px;border-bottom:1px solid var(--line)}
+.topbar a{font-weight:bold;text-decoration:none}
+.topbar form{margin-left:auto}
+button.linkish{background:none;border:0;color:var(--navy);cursor:pointer;
+  font:inherit;text-decoration:underline;padding:0}
+nav.crumbs{font-size:13px;color:var(--muted);margin:0 0 16px}
+nav.crumbs a{text-decoration:none}
+ul.cards .links{font-size:12px;margin-left:10px}
+h3{font-size:14px;margin:22px 0 8px}
+h3 .tag{font-weight:normal}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:12px;margin:0 0 14px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px}
+label>span{font-weight:bold}
+label .req{font-weight:normal;color:var(--warn);font-size:11px}
+label.wide{max-width:620px;margin:0 0 14px}
+label.check{flex-direction:row;align-items:center;gap:8px}
+label.check>span{font-weight:normal}
+input,select,textarea{font:inherit;padding:7px 9px;border:1px solid var(--line);
+  border-radius:5px;background:var(--paper);color:var(--ink);width:100%}
+input.num{text-align:right}
+input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--navy);outline-offset:1px}
+td input,td select{padding:5px 7px}
+button{font:inherit;font-weight:bold;padding:9px 14px;border:0;border-radius:5px;
+  background:var(--navy);color:var(--paper);cursor:pointer}
+button.secondary{background:var(--band);color:var(--navy);
+  border:1px solid var(--navy)}
+button:disabled{opacity:.6;cursor:default}
+td.ctr,th.ctr{text-align:center}
+.struck{text-decoration:line-through;color:var(--muted)}
+.row-overdue td{background:#fbe4e4}
+.row-soon td{background:#fff4d6}
+p.ok{color:#14652c;font-size:13px;margin:6px 0 0}
+p.warn{color:var(--warn)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .row-overdue td{background:#3a1f1f}
+  :root:not([data-theme="light"]) .row-soon td{background:#2b2216}
+  :root:not([data-theme="light"]) p.ok{color:#6fce8b}
+}
+@media print{ .no-print,.topbar{display:none} }

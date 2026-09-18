@@ -1,0 +1,76 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { CostEditor } from "@/components/CostEditor";
+import { ResourceEditor } from "@/components/ResourceEditor";
+import { TaskTable } from "@/components/TaskTable";
+import { currentProfile, getEngagement } from "@/lib/db";
+import { isSupabaseConfigured } from "@/lib/env";
+
+export const dynamic = "force-dynamic";
+
+export default async function WorkPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (!isSupabaseConfigured) notFound();
+
+  const [detail, profile] = await Promise.all([getEngagement(id), currentProfile()]);
+  if (!detail) notFound();
+
+  const today = new Date().toISOString().slice(0, 10);
+  const open = detail.tasks.filter((t) => t.status !== "done" && t.status !== "na");
+  const overdue = open.filter((t) => t.due_date < today);
+  const isOwner = profile?.role === "owner";
+
+  // Field lists come from the template, so the forms match the program rather
+  // than whatever happened to be stored.
+  const fieldsByKey = new Map(detail.program.resources.map((r) => [r.key, r.fields ?? []]));
+
+  return (
+    <main>
+      <nav className="crumbs">
+        <Link href="/">Engagements</Link> / <Link href={`/engagements/${id}`}>Coordination doc</Link>
+        {isOwner && (
+          <>
+            {" / "}
+            <Link href={`/engagements/${id}/edit`}>Edit</Link>
+          </>
+        )}
+      </nav>
+
+      <h1>{detail.row.client_name}</h1>
+      <p className="sub">
+        {detail.program.name} &middot; {detail.row.delivery_date} &middot; {detail.row.status}
+      </p>
+
+      <p className={overdue.length > 0 ? "warn" : "band"}>
+        <strong>{open.length} open</strong>
+        {overdue.length > 0 && <> &middot; <strong>{overdue.length} overdue</strong></>}
+        {detail.row.notes && <> &middot; {detail.row.notes}</>}
+      </p>
+
+      <h2>Tasks</h2>
+      <TaskTable engagementId={id} tasks={detail.tasks} today={today} />
+
+      <h2>Resources</h2>
+      <p className="band">
+        Record what you booked: vendor, confirmation number, cost. The requirement beside each
+        heading is computed from the program and the counts.
+      </p>
+      {detail.resources.length === 0 ? (
+        <p className="band">No resource slots yet. Regenerate to create them.</p>
+      ) : (
+        detail.resources.map((r) => (
+          <ResourceEditor
+            key={r.id}
+            engagementId={id}
+            resource={r}
+            fieldNames={fieldsByKey.get(r.resource_key) ?? Object.keys(r.fields ?? {})}
+          />
+        ))
+      )}
+
+      <h2>Costs</h2>
+      <CostEditor engagementId={id} costs={detail.costs} />
+    </main>
+  );
+}

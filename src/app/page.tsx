@@ -33,7 +33,14 @@ export default async function Home() {
         <ul className="cards">
           {engagements.map((e) => (
             <li key={e.id}>
-              <Link href={`/engagements/${e.id}`}>{e.clientName}</Link>
+              <Link href={`/engagements/${e.id}/work`}>{e.clientName}</Link>
+              {isSupabaseConfigured && (
+                <span className="links">
+                  <Link href={`/engagements/${e.id}`}>coordination doc</Link>
+                  {" · "}
+                  <Link href={`/engagements/${e.id}/edit`}>edit</Link>
+                </span>
+              )}
               <p className="det">
                 {e.programName} &middot; {e.deliveryDate}
                 {e.deliveryDate < today && " (delivered)"}
