@@ -45,9 +45,18 @@ export function formatTime(mins: number): string {
  * Build the evaluation context: the engagement's own numeric and boolean
  * parameters, plus derived values the template refers to.
  */
-export function buildContext(params: EngagementParams): Context {
+export function buildContext(params: EngagementParams, program?: Program): Context {
   // Null prototype: nothing inherited can be reachable as an identifier.
   const ctx: Context = Object.create(null) as Context;
+
+  // Declared defaults first, so a condition referring to a parameter added
+  // after an engagement was created still evaluates instead of throwing.
+  for (const p of program?.parameters ?? []) {
+    if (typeof p.default === "number" || typeof p.default === "boolean") {
+      ctx[p.key] = p.default;
+    }
+  }
+
   for (const [k, v] of Object.entries(params)) {
     if (typeof v === "number" || typeof v === "boolean") ctx[k] = v;
   }
@@ -157,7 +166,7 @@ export function generateTasks(
   params: EngagementParams,
   deliveryDate: string,
 ): GeneratedTask[] {
-  const ctx = buildContext(params);
+  const ctx = buildContext(params, program);
   const out: GeneratedTask[] = [];
   for (const rule of program.tasks) {
     if (rule.condition && !evalBoolean(rule.condition, ctx)) continue;
@@ -178,7 +187,7 @@ export function generateTasks(
 }
 
 export function computeQuantities(program: Program, params: EngagementParams): GeneratedQuantity[] {
-  const ctx = buildContext(params);
+  const ctx = buildContext(params, program);
   return program.quantities.map((q) => ({
     item: q.item,
     qty: evalNumber(q.formula, ctx),
@@ -194,7 +203,7 @@ export function computeQuantities(program: Program, params: EngagementParams): G
  * three buses from the same template.
  */
 export function resolveResources(program: Program, params: EngagementParams): GeneratedResource[] {
-  const ctx = buildContext(params);
+  const ctx = buildContext(params, program);
   const out: GeneratedResource[] = [];
   for (const rule of program.resources) {
     if (!rule.always && rule.condition && !evalBoolean(rule.condition, ctx)) continue;

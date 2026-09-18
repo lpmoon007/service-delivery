@@ -113,3 +113,12 @@ p.warn{color:var(--warn)}
 a.cta{display:inline-block;background:var(--navy);color:var(--paper);
   padding:9px 14px;border-radius:5px;font-weight:bold;text-decoration:none}
 datalist{display:none}
+
+/* --------------------------------------------------- generated letters -- */
+.letter{max-width:720px}
+.letter h2{font-size:13px;border-bottom-width:1px;margin-top:26px}
+.letter p{margin:0 0 11px}
+.letter .greeting{margin:18px 0 16px}
+.letter ol,.letter ul{margin:0 0 12px;padding-left:22px}
+.letter li{margin:0 0 6px}
+.letter .signoff{margin-top:24px;line-height:1.7}

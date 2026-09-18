@@ -79,6 +79,38 @@ export interface CostLine {
   computed?: string;
 }
 
+/**
+ * A document the program generates, beyond the coordination doc.
+ *
+ * Bodies interpolate {{token}} against the engagement's computed context, so a
+ * letter stays correct when a date or a count changes instead of being a copy
+ * that quietly goes stale.
+ */
+export interface DocumentSection {
+  heading?: string;
+  /** Paragraphs. Each is interpolated. */
+  body?: string[];
+  /** Numbered or bulleted points, also interpolated. */
+  bullets?: string[];
+  ordered?: boolean;
+  /** Boolean expression over engagement params; omit to always include. */
+  condition?: string;
+}
+
+export interface ProgramDocument {
+  key: string;
+  title: string;
+  /** Who it is written to. Drives the page heading, not permissions. */
+  audience: string;
+  /** One line describing when to send it. */
+  purpose?: string;
+  /** Day offset from delivery when this should go out. */
+  send_offset?: number;
+  greeting?: string;
+  sections: DocumentSection[];
+  signoff?: string[];
+}
+
 export interface Program {
   code: string;
   name: string;
@@ -96,6 +128,7 @@ export interface Program {
   };
   tasks: TaskRule[];
   cost_lines: CostLine[];
+  documents?: ProgramDocument[];
 }
 
 /** Engagement-specific inputs. Values feed the template's expressions. */

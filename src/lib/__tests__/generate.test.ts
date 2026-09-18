@@ -225,7 +225,7 @@ describe("task generation", () => {
 describe("generateEngagement", () => {
   it("assembles everything for Ledgebrook", () => {
     const g = generateEngagement(BAD, LEDGEBROOK, LEDGEBROOK_DELIVERY);
-    expect(g.tasks.length).toBe(41);
+    expect(g.tasks.length).toBe(47);
     expect(g.resources.length).toBe(6);
     expect(g.quantities.length).toBe(11);
     expect(formatTime(g.runOfShow.reveal)).toBe("4:30 PM");
@@ -233,7 +233,7 @@ describe("generateEngagement", () => {
 
   it("assembles everything for DeVry", () => {
     const g = generateEngagement(BAD, DEVRY, DEVRY_DELIVERY, DEVRY_OVERRIDES);
-    expect(g.tasks.length).toBe(42);
+    expect(g.tasks.length).toBe(48);
     expect(g.resources.length).toBe(7);
   });
 

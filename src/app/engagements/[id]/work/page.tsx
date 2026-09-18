@@ -49,6 +49,27 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         {detail.row.notes && <> &middot; {detail.row.notes}</>}
       </p>
 
+      {(detail.program.documents ?? []).length > 0 && (
+        <>
+          <h2>Documents</h2>
+          <ul className="cards">
+            {(detail.program.documents ?? []).map((d) => (
+              <li key={d.key}>
+                <Link href={`/engagements/${id}/documents/${d.key}`}>{d.title.replace("{{beneficiary_org}}", detail.row.client_name)}</Link>
+                <p className="det">
+                  {d.audience}
+                  {d.purpose && <> &middot; {d.purpose}</>}
+                </p>
+              </li>
+            ))}
+            <li>
+              <Link href={`/engagements/${id}`}>Logistics and coordination doc</Link>
+              <p className="det">Internal. The crew, materials, run of show, tasks and costs.</p>
+            </li>
+          </ul>
+        </>
+      )}
+
       <h2>Tasks</h2>
       <TaskTable engagementId={id} tasks={detail.tasks} today={today} />
 
