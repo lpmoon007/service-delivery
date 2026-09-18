@@ -101,3 +101,38 @@ export const DEVRY_STATED = {
   briefSheets: 110,
   materialsVan: true,
 };
+
+/**
+ * Cologix, 2026-10-19. Inspiring Minds.
+ *
+ * Numbers as JC stated them: 40 participants, 20 children, 7 to 8 teachers
+ * from other schools. Two things about that do not fit the program's own spec
+ * and are asserted here so they stay visible rather than being quietly
+ * smoothed over:
+ *
+ *  - The program is built on three adults per child. 40 over 20 is two.
+ *  - 20 children is four pods, and four pods calls for 60 participants.
+ *
+ * "Other schools", plural, also suggests more than one partner organization,
+ * and each one is entitled to a classroom collection.
+ */
+export const COLOGIX: EngagementParams = {
+  client: "Cologix",
+  program: "IM",
+  variation: "The Long Current",
+  format: "Department day",
+  participants: 40,
+  teams: 0,
+  beneficiaries: 20,
+  partner_orgs: 1,
+  chaperones: 8,
+  beneficiary_org: "TBC",
+  beneficiary_minors: true,
+  beneficiary_travels: true,
+  stage_led_reversal: false,
+  dimmable_room: false,
+  event_start: "13:00",
+  beneficiary_depart_by: null,
+};
+
+export const COLOGIX_DELIVERY = "2026-10-19";

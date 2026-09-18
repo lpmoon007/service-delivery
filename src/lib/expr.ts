@@ -15,10 +15,14 @@
  *   add     := mul ( ( "+" | "-" ) mul )*
  *   mul     := unary ( ( "*" | "/" | "%" ) unary )*
  *   unary   := "-" unary | primary
- *   primary := number | "true" | "false" | ident | call | "(" expr ")"
+ *   primary := number | string | "true" | "false" | ident | call | "(" expr ")"
+ *
+ * Strings exist only to be compared with == and !=, so a program can branch on
+ * a named variation ("variation == 'Trace Evidence'") without the language
+ * growing a string library.
  */
 
-export type Scalar = number | boolean;
+export type Scalar = number | boolean | string;
 export type Context = Record<string, Scalar>;
 
 /** Build a context with no inherited properties. */
@@ -44,6 +48,7 @@ export class ExprError extends Error {
 
 type Tok =
   | { k: "num"; v: number }
+  | { k: "str"; v: string }
   | { k: "ident"; v: string }
   | { k: "op"; v: string }
   | { k: "("; }
@@ -74,6 +79,13 @@ function tokenize(src: string): Tok[] {
     if (c === ",") {
       out.push({ k: "," });
       i++;
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      const end = src.indexOf(c, i + 1);
+      if (end === -1) throw new ExprError(`unterminated string at ${i}`, src);
+      out.push({ k: "str", v: src.slice(i + 1, end) });
+      i = end + 1;
       continue;
     }
     if (/[0-9.]/.test(c)) {
@@ -220,6 +232,7 @@ class Parser {
   private primary(): Scalar {
     const t = this.take();
     if (t.k === "num") return t.v;
+    if (t.k === "str") return t.v;
     if (t.k === "(") {
       const v = this.or();
       this.expect(")");
@@ -251,8 +264,8 @@ class Parser {
         throw new ExprError(`unknown identifier ${t.v}`, this.src);
       }
       const val = this.ctx[t.v];
-      if (typeof val !== "number" && typeof val !== "boolean") {
-        throw new ExprError(`identifier ${t.v} is not a number or boolean`, this.src);
+      if (typeof val !== "number" && typeof val !== "boolean" && typeof val !== "string") {
+        throw new ExprError(`identifier ${t.v} is not a number, boolean or string`, this.src);
       }
       return val;
     }

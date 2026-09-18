@@ -10,6 +10,10 @@ export interface ProgramParameter {
   type: "int" | "number" | "text" | "bool" | "time";
   required?: boolean;
   default?: string | number | boolean;
+  /** A fixed set of choices. Renders as a dropdown rather than a text box. */
+  options?: string[];
+  /** One line of guidance shown under the field. */
+  help?: string;
 }
 
 export interface QuantityRule {
@@ -123,6 +127,13 @@ export interface Program {
   run_of_show: {
     anchor: string;
     anchor_rule: string;
+    /**
+     * Minutes from the anchor until the beneficiaries leave. Used to pin the
+     * anchor when an engagement has a hard departure deadline. Program-specific:
+     * Build A Dream's children go 30 minutes after the reveal, Inspiring Minds'
+     * young scientists stay 60. Defaults to 30 when absent.
+     */
+    reveal_to_departure?: number;
     main_track: RunOfShowStep[];
     beneficiary_track: BeneficiaryStep[];
   };

@@ -41,6 +41,30 @@ export function ProgramParamFields({
           );
         }
 
+        if (p.options && p.options.length > 0) {
+          return (
+            <label key={p.key}>
+              <span>
+                {p.label}
+                {p.required && <span className="req"> required</span>}
+              </span>
+              <select
+                name={`param.${p.key}`}
+                defaultValue={v === null || v === undefined ? "" : String(v)}
+                disabled={disabled}
+              >
+                {!p.required && <option value="">not set</option>}
+                {p.options.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+              {p.help && <span className="det">{p.help}</span>}
+            </label>
+          );
+        }
+
         return (
           <label key={p.key}>
             <span>
@@ -56,6 +80,7 @@ export function ProgramParamFields({
               defaultValue={v === null || v === undefined ? "" : String(v)}
               disabled={disabled}
             />
+            {p.help && <span className="det">{p.help}</span>}
           </label>
         );
       })}

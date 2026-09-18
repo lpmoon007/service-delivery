@@ -48,9 +48,10 @@ interface SeedEngagement {
  * The live engagements, from HubSpot closed-won deals as of 2026-09-17.
  * Cologix is 10/19 per JC; HubSpot still shows 10/01.
  *
- * Only Ledgebrook is a confirmed Build A Dream. The other four are placed on
- * the same program so the timeline exists; correct the program and the
- * participant, team and beneficiary counts before relying on them.
+ * Ledgebrook is real Build A Dream data. Cologix is real Inspiring Minds data
+ * with two stated numbers that do not reconcile; see its note. The remaining
+ * three carry PLACEHOLDER counts on Build A Dream purely so a timeline exists,
+ * and their program and counts must be corrected before anyone relies on them.
  */
 const ENGAGEMENTS: SeedEngagement[] = [
   {
@@ -142,21 +143,31 @@ const ENGAGEMENTS: SeedEngagement[] = [
   {
     hubspotDealId: "349230649080",
     clientName: "Cologix",
-    programCode: "BAD",
+    programCode: "IM",
     deliveryDate: "2026-10-19",
-    status: "planning",
-    notes: "Date corrected to 10/19 per JC; HubSpot still shows 10/01. PLACEHOLDER counts.",
+    status: "confirmed",
+    notes:
+      "Inspiring Minds, The Long Current, per JC. 40 participants, 20 children, 7-8 teachers " +
+      "from other schools. TWO THINGS TO RESOLVE: the program is built on three adults per child " +
+      "and this is two, and 20 children is four pods which calls for 60 participants. " +
+      "\"Other schools\" plural may also mean more than one partner organization, each of which " +
+      "is entitled to a classroom collection.",
     params: {
       client: "Cologix",
-      program: "BAD",
-      participants: 50,
-      teams: 10,
-      beneficiaries: 10,
+      program: "IM",
+      variation: "The Long Current",
+      format: "Department day",
+      participants: 40,
+      teams: 0,
+      beneficiaries: 20,
+      partner_orgs: 1,
+      chaperones: 8,
       beneficiary_org: "TBC",
       beneficiary_minors: true,
       beneficiary_travels: true,
-      bikes_go_home_same_day: false,
-      event_start: "09:00",
+      stage_led_reversal: false,
+      dimmable_room: false,
+      event_start: "13:00",
       beneficiary_depart_by: null,
     },
   },

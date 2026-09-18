@@ -540,7 +540,8 @@
         "label": "Children depart the venue",
         "offset_from_reveal": 30
       }
-    ]
+    ],
+    "reveal_to_departure": 30
   },
   "tasks": [
     {

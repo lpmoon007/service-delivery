@@ -52,21 +52,32 @@ export function buildContext(params: EngagementParams, program?: Program): Conte
   // Declared defaults first, so a condition referring to a parameter added
   // after an engagement was created still evaluates instead of throwing.
   for (const p of program?.parameters ?? []) {
-    if (typeof p.default === "number" || typeof p.default === "boolean") {
+    if (
+      typeof p.default === "number" ||
+      typeof p.default === "boolean" ||
+      typeof p.default === "string"
+    ) {
       ctx[p.key] = p.default;
     }
   }
 
+  // Strings are included so a condition can branch on a named variation.
   for (const [k, v] of Object.entries(params)) {
-    if (typeof v === "number" || typeof v === "boolean") ctx[k] = v;
+    if (typeof v === "number" || typeof v === "boolean" || typeof v === "string") {
+      ctx[k] = v;
+    }
   }
   // Derived: one bicycle per child plus two spares.
   ctx.bikes = params.beneficiaries + 2;
   return ctx;
 }
 
-/** How long the beneficiaries stay after the reveal, in minutes. */
-const REVEAL_TO_DEPARTURE = 30;
+/**
+ * Default minutes from the anchor until the beneficiaries leave, when a program
+ * does not state its own. Build A Dream's 30 was the original value and stays
+ * the fallback.
+ */
+const DEFAULT_REVEAL_TO_DEPARTURE = 30;
 
 /**
  * Compute both tracks.
@@ -102,8 +113,11 @@ export function computeRunOfShow(
   let basis: string;
   const anchoredBackward = Boolean(params.beneficiary_depart_by);
 
+  const revealToDeparture =
+    program.run_of_show.reveal_to_departure ?? DEFAULT_REVEAL_TO_DEPARTURE;
+
   if (params.beneficiary_depart_by) {
-    reveal = parseTime(params.beneficiary_depart_by) - REVEAL_TO_DEPARTURE;
+    reveal = parseTime(params.beneficiary_depart_by) - revealToDeparture;
     start = reveal - preAnchorMinutes;
     basis =
       `beneficiaries depart by ${formatTime(parseTime(params.beneficiary_depart_by))}, ` +
