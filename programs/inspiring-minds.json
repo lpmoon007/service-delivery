@@ -4,218 +4,910 @@
   "family": "stem-give-back",
   "summary": "Ninety minutes. Adults compete on a science mystery, a locked object opens and reframes the exercise, then children arrive and the adults teach them what they just discovered. Every child leaves with their own locked kit; every partner organization leaves with a classroom collection.",
   "source": "Modeled from Inspiring Minds: Give-back program variations. Durations, ratios and scale bands are as stated there.",
-
   "parameters": [
-    { "key": "variation", "label": "Industry variation", "type": "text", "required": true,
-      "options": ["Secrets Through Time", "Trace Evidence", "The Long Current"],
-      "help": "Security, software and finance take Secrets Through Time. Diagnosis, evidence or judgement takes Trace Evidence. Anyone who builds, powers or moves things takes The Long Current. Genuinely mixed rooms take Secrets Through Time." },
-    { "key": "format", "label": "Format", "type": "text", "required": true,
-      "options": ["Leadership offsite", "Department day", "Conference breakout", "General session", "Multi-room"],
-      "help": "Drives staffing, AV and whether the reversal is delivered from a stage or at the table." },
-    { "key": "participants", "label": "Participants (adults)", "type": "int", "required": true,
-      "help": "One pod is fifteen participants in five teams of three." },
-    { "key": "beneficiaries", "label": "Young scientists (children)", "type": "int", "required": true,
-      "help": "Five per pod, one per team of three. Ages roughly 11 to 13." },
-    { "key": "partner_orgs", "label": "Partner organizations", "type": "int", "default": 1,
-      "help": "Each receives a classroom collection. Large events fund several." },
-    { "key": "chaperones", "label": "Chaperones accompanying the children", "type": "int" },
-    { "key": "beneficiary_org", "label": "Partner organization", "type": "text", "required": true },
-    { "key": "beneficiary_minors", "label": "Beneficiaries are minors", "type": "bool", "default": true },
-    { "key": "beneficiary_travels", "label": "Children travel to the venue", "type": "bool", "default": true },
-    { "key": "stage_led_reversal", "label": "Reversal delivered from a stage", "type": "bool", "default": false,
-      "help": "Table-delivered below about ten pods; stage-led above." },
-    { "key": "dimmable_room", "label": "Room can be dimmed", "type": "bool", "default": false,
-      "help": "Required for the signal station in The Long Current." },
-    { "key": "event_start", "label": "Participant arrival time", "type": "time", "required": true },
-    { "key": "beneficiary_depart_by", "label": "Hard deadline: children must depart by", "type": "time",
-      "help": "Set this and the whole ninety minutes is placed backward from it." },
-    { "key": "age_min", "label": "Youngest child age", "type": "int", "default": 11 },
-    { "key": "age_max", "label": "Oldest child age", "type": "int", "default": 13 },
-    { "key": "client_descriptor", "label": "How to describe the client to the partner organization", "type": "text", "default": "A company" },
-    { "key": "beneficiary_contact_name", "label": "Partner organization contact, first name", "type": "text" },
-    { "key": "beneficiary_transport_by", "label": "Who provides child transport", "type": "text", "default": "the partner organization" },
-    { "key": "greeter_name", "label": "Who meets the children on arrival", "type": "text" },
-    { "key": "holding_room", "label": "Holding room", "type": "text", "default": "to be confirmed" },
-    { "key": "venue_phone", "label": "Venue phone", "type": "text" },
-    { "key": "sender_name", "label": "Letter signed by", "type": "text", "default": "James Carter" },
-    { "key": "sender_title", "label": "Signer title", "type": "text", "default": "Founder and CEO, Be Legendary" },
-    { "key": "sender_phone", "label": "Signer phone", "type": "text", "default": "775-980-5703" },
-    { "key": "sender_email", "label": "Signer email", "type": "text", "default": "jcarter@repario.com" }
-  ],
-
-  "quantities": [
-    { "item": "Pods", "formula": "max(ceil(participants / 15), ceil(beneficiaries / 5))", "basis": "fifteen participants and five children per pod; whichever count needs more pods wins", "confidence": "high" },
-    { "item": "Teams of three", "formula": "max(ceil(participants / 15), ceil(beneficiaries / 5)) * 5", "basis": "five teams per pod", "confidence": "high" },
-    { "item": "Station tables", "formula": "max(ceil(participants / 15), ceil(beneficiaries / 5)) * 5", "basis": "five stations per pod", "confidence": "high" },
-    { "item": "Station kits (sets of five)", "formula": "max(ceil(participants / 15), ceil(beneficiaries / 5))", "basis": "one set of five stations per pod", "confidence": "high" },
-    { "item": "Pod locked objects", "formula": "max(ceil(participants / 15), ceil(beneficiaries / 5))", "basis": "one locked object per pod", "confidence": "high" },
-    { "item": "Child kits", "formula": "beneficiaries", "basis": "every child leaves with one", "confidence": "high" },
-    { "item": "Field books", "formula": "beneficiaries", "basis": "one per child kit", "confidence": "high" },
-    { "item": "Journals", "formula": "beneficiaries", "basis": "one per child kit", "confidence": "high" },
-    { "item": "Classroom collections", "formula": "max(1, partner_orgs)", "basis": "one per partner organization", "confidence": "high" },
-    { "item": "Water jugs", "formula": "max(ceil(participants / 15), ceil(beneficiaries / 5))", "basis": "chromatography station, one per pod", "confidence": "high", "note": "Trace Evidence only. Water logistics start to lead the plan beyond about forty pods." },
-    { "item": "Lead facilitators", "formula": "1", "basis": "one lead at every size", "confidence": "high" },
-    { "item": "Facilitators", "formula": "max(1, ceil(max(ceil(participants / 15), ceil(beneficiaries / 5)) / 2))", "basis": "one facilitator per two pods", "confidence": "medium", "note": "Stated for a department day. Conference and general sessions use zone captains instead; confirm against the format." },
-    { "item": "Adults per child", "formula": "participants / beneficiaries", "basis": "the program is built on three to one", "confidence": "high", "note": "Three to one is fixed at every size. A number materially below three means either the participant count or the child count is wrong." }
-  ],
-
-  "resources": [
-    { "key": "venue", "label": "Venue", "always": true,
-      "fields": ["name", "address", "contact_name", "contact_phone", "room", "table_count", "power_notes", "lighting_notes"],
-      "note": "Venue provides tables and chairs, power, and dimmable lighting where the variation needs it." },
-    { "key": "partner_org", "label": "Partner organization", "always": true,
-      "fields": ["org_name", "address", "contact_name", "contact_phone", "contact_email", "child_count", "chaperone_count", "consent_status", "arrival_time"],
-      "note": "The partner organization coordinates arrival, consent, chaperones and transport. Arrival is timed to minute 35 regardless of scale." },
-    { "key": "child_transport", "label": "Child transport", "condition": "beneficiary_travels",
-      "vehicle_rule": [
-        { "when": "beneficiaries <= 8", "vehicle": "Van or car pool", "count_formula": "1" },
-        { "when": "beneficiaries <= 20", "vehicle": "Minibus or van", "count_formula": "ceil(beneficiaries / 14)" },
-        { "when": "beneficiaries > 20", "vehicle": "School or charter bus", "count_formula": "ceil(beneficiaries / 40)" }
+    {
+      "key": "variation",
+      "label": "Industry variation",
+      "type": "text",
+      "required": true,
+      "options": [
+        "Secrets Through Time",
+        "Trace Evidence",
+        "The Long Current"
       ],
-      "fields": ["vendor", "vendor_phone", "confirmation_number", "vehicle_type", "vehicle_count", "pickup_time", "distance_mi", "cost"] },
-    { "key": "av_and_staging", "label": "AV and staging",
-      "condition": "max(ceil(participants / 15), ceil(beneficiaries / 5)) > 10",
-      "fields": ["vendor", "contact", "mic_type", "countdown_clock", "stage_notes", "cost"],
-      "note": "AV is needed above roughly ten pods, with a countdown clock for stage-led timing." },
-    { "key": "kit_production", "label": "Kit production", "always": true,
-      "fields": ["owner", "order_date", "ship_date", "tracking", "cost"],
-      "note": "Lead time is three weeks to around thirty pods, six to eight weeks beyond that." },
-    { "key": "photography", "label": "Photography", "always": true,
-      "fields": ["photographer", "contact", "cost"] }
+      "help": "Security, software and finance take Secrets Through Time. Diagnosis, evidence or judgement takes Trace Evidence. Anyone who builds, powers or moves things takes The Long Current. Genuinely mixed rooms take Secrets Through Time."
+    },
+    {
+      "key": "format",
+      "label": "Format",
+      "type": "text",
+      "required": true,
+      "options": [
+        "Leadership offsite",
+        "Department day",
+        "Conference breakout",
+        "General session",
+        "Multi-room"
+      ],
+      "help": "Drives staffing, AV and whether the reversal is delivered from a stage or at the table."
+    },
+    {
+      "key": "participants",
+      "label": "Participants (adults)",
+      "type": "int",
+      "required": true,
+      "help": "One pod is fifteen participants in five teams of three."
+    },
+    {
+      "key": "beneficiaries",
+      "label": "Young scientists (children)",
+      "type": "int",
+      "required": true,
+      "help": "Five per pod, one per team of three. Ages roughly 11 to 13."
+    },
+    {
+      "key": "partner_orgs",
+      "label": "Partner organizations",
+      "type": "int",
+      "default": 1,
+      "help": "Each receives a classroom collection. Large events fund several."
+    },
+    {
+      "key": "chaperones",
+      "label": "Chaperones accompanying the children",
+      "type": "int"
+    },
+    {
+      "key": "beneficiary_org",
+      "label": "Partner organization",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "beneficiary_minors",
+      "label": "Beneficiaries are minors",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "key": "beneficiary_travels",
+      "label": "Children travel to the venue",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "key": "stage_led_reversal",
+      "label": "Reversal delivered from a stage",
+      "type": "bool",
+      "default": false,
+      "help": "Table-delivered below about ten pods; stage-led above."
+    },
+    {
+      "key": "dimmable_room",
+      "label": "Room can be dimmed",
+      "type": "bool",
+      "default": false,
+      "help": "Required for the signal station in The Long Current."
+    },
+    {
+      "key": "event_start",
+      "label": "Participant arrival time",
+      "type": "time",
+      "required": true
+    },
+    {
+      "key": "beneficiary_depart_by",
+      "label": "Hard deadline: children must depart by",
+      "type": "time",
+      "help": "Set this and the whole ninety minutes is placed backward from it."
+    },
+    {
+      "key": "age_min",
+      "label": "Youngest child age",
+      "type": "int",
+      "default": 11
+    },
+    {
+      "key": "age_max",
+      "label": "Oldest child age",
+      "type": "int",
+      "default": 13
+    },
+    {
+      "key": "client_descriptor",
+      "label": "How to describe the client to the partner organization",
+      "type": "text",
+      "default": "A company"
+    },
+    {
+      "key": "beneficiary_contact_name",
+      "label": "Partner organization contact, first name",
+      "type": "text"
+    },
+    {
+      "key": "beneficiary_transport_by",
+      "label": "Who provides child transport",
+      "type": "text",
+      "default": "the partner organization"
+    },
+    {
+      "key": "greeter_name",
+      "label": "Who meets the children on arrival",
+      "type": "text"
+    },
+    {
+      "key": "holding_room",
+      "label": "Holding room",
+      "type": "text",
+      "default": "to be confirmed"
+    },
+    {
+      "key": "venue_phone",
+      "label": "Venue phone",
+      "type": "text"
+    },
+    {
+      "key": "sender_name",
+      "label": "Letter signed by",
+      "type": "text",
+      "default": "James Carter"
+    },
+    {
+      "key": "sender_title",
+      "label": "Signer title",
+      "type": "text",
+      "default": "Founder and CEO, Be Legendary"
+    },
+    {
+      "key": "sender_phone",
+      "label": "Signer phone",
+      "type": "text",
+      "default": "775-980-5703"
+    },
+    {
+      "key": "sender_email",
+      "label": "Signer email",
+      "type": "text",
+      "default": "jcarter@repario.com"
+    }
   ],
-
+  "derived": {
+    "pods": "max(ceil(participants / 15), ceil(beneficiaries / 5))"
+  },
+  "quantities": [
+    {
+      "item": "Pods",
+      "formula": "pods",
+      "basis": "fifteen participants and five children per pod; whichever count needs more pods wins",
+      "confidence": "high"
+    },
+    {
+      "item": "Teams of three",
+      "formula": "pods * 5",
+      "basis": "five teams per pod",
+      "confidence": "high"
+    },
+    {
+      "item": "Station tables",
+      "formula": "pods * 5",
+      "basis": "five stations per pod",
+      "confidence": "high"
+    },
+    {
+      "item": "Station kits (sets of five)",
+      "formula": "pods",
+      "basis": "one set of five stations per pod",
+      "confidence": "high"
+    },
+    {
+      "item": "Pod locked objects",
+      "formula": "pods",
+      "basis": "one locked object per pod",
+      "confidence": "high"
+    },
+    {
+      "item": "Child kits",
+      "formula": "beneficiaries",
+      "basis": "every child leaves with one",
+      "confidence": "high"
+    },
+    {
+      "item": "Field books",
+      "formula": "beneficiaries",
+      "basis": "one per child kit",
+      "confidence": "high"
+    },
+    {
+      "item": "Journals",
+      "formula": "beneficiaries",
+      "basis": "one per child kit",
+      "confidence": "high"
+    },
+    {
+      "item": "Classroom collections",
+      "formula": "max(1, partner_orgs)",
+      "basis": "one per partner organization",
+      "confidence": "high"
+    },
+    {
+      "item": "Water jugs",
+      "formula": "pods",
+      "basis": "chromatography station, one per pod",
+      "confidence": "high",
+      "note": "Trace Evidence only. Water logistics start to lead the plan beyond about forty pods."
+    },
+    {
+      "item": "Lead facilitators",
+      "formula": "1",
+      "basis": "one lead at every size",
+      "confidence": "high"
+    },
+    {
+      "item": "Facilitators",
+      "formula": "max(1, ceil(pods / 2))",
+      "basis": "one facilitator per two pods",
+      "confidence": "medium",
+      "note": "Stated for a department day. Conference and general sessions use zone captains instead; confirm against the format."
+    },
+    {
+      "item": "Adults per child",
+      "formula": "participants / beneficiaries",
+      "basis": "the program is built on three to one",
+      "confidence": "high",
+      "note": "Three to one is fixed at every size. A number materially below three means either the participant count or the child count is wrong."
+    }
+  ],
+  "resources": [
+    {
+      "key": "venue",
+      "label": "Venue",
+      "always": true,
+      "fields": [
+        "name",
+        "address",
+        "contact_name",
+        "contact_phone",
+        "room",
+        "table_count",
+        "power_notes",
+        "lighting_notes"
+      ],
+      "note": "Venue provides tables and chairs, power, and dimmable lighting where the variation needs it."
+    },
+    {
+      "key": "partner_org",
+      "label": "Partner organization",
+      "always": true,
+      "fields": [
+        "org_name",
+        "address",
+        "contact_name",
+        "contact_phone",
+        "contact_email",
+        "child_count",
+        "chaperone_count",
+        "consent_status",
+        "arrival_time"
+      ],
+      "note": "The partner organization coordinates arrival, consent, chaperones and transport. Arrival is timed to minute 35 regardless of scale."
+    },
+    {
+      "key": "child_transport",
+      "label": "Child transport",
+      "condition": "beneficiary_travels",
+      "vehicle_rule": [
+        {
+          "when": "beneficiaries <= 8",
+          "vehicle": "Van or car pool",
+          "count_formula": "1"
+        },
+        {
+          "when": "beneficiaries <= 20",
+          "vehicle": "Minibus or van",
+          "count_formula": "ceil(beneficiaries / 14)"
+        },
+        {
+          "when": "beneficiaries > 20",
+          "vehicle": "School or charter bus",
+          "count_formula": "ceil(beneficiaries / 40)"
+        }
+      ],
+      "fields": [
+        "vendor",
+        "vendor_phone",
+        "confirmation_number",
+        "vehicle_type",
+        "vehicle_count",
+        "pickup_time",
+        "distance_mi",
+        "cost"
+      ]
+    },
+    {
+      "key": "av_and_staging",
+      "label": "AV and staging",
+      "condition": "pods > 10",
+      "fields": [
+        "vendor",
+        "contact",
+        "mic_type",
+        "countdown_clock",
+        "stage_notes",
+        "cost"
+      ],
+      "note": "AV is needed above roughly ten pods, with a countdown clock for stage-led timing."
+    },
+    {
+      "key": "kit_production",
+      "label": "Kit production",
+      "always": true,
+      "fields": [
+        "owner",
+        "order_date",
+        "ship_date",
+        "tracking",
+        "cost"
+      ],
+      "note": "Lead time is three weeks to around thirty pods, six to eight weeks beyond that."
+    },
+    {
+      "key": "photography",
+      "label": "Photography",
+      "always": true,
+      "fields": [
+        "photographer",
+        "contact",
+        "cost"
+      ]
+    }
+  ],
   "run_of_show": {
     "anchor": "reversal",
     "anchor_rule": "The reveal happens once, for the whole room, at minute thirty, and the children join at minute thirty-five regardless of scale. If the engagement has a hard departure deadline for the children, the ninety minutes is placed backward from it; otherwise it runs forward from participant arrival.",
     "reveal_to_departure": 60,
     "main_track": [
-      { "id": "setup", "label": "Load-in and setup", "duration": 120, "before_start": true,
-        "details": ["Station tables laid per pod, five stations each", "Pod locked objects placed with something visibly inside", "Child kits staged out of sight", "Power and lighting checked", "AV and countdown clock where the format needs it"] },
-      { "id": "arrival", "label": "Participants arrive and are seated", "duration": 15,
-        "details": ["Teams of three, pre-assigned and mixed across departments", "Five teams to a pod"] },
-      { "id": "mission", "label": "The Mission: the mystery", "duration": 5,
-        "details": ["The locked object is introduced and nothing else is explained", "Five teams take five cases off the table", "No lecture. There is a clock."] },
-      { "id": "investigate", "label": "Investigate: discovery", "duration": 20,
-        "details": ["Phones encouraged", "Prompts point toward the answer without giving it", "Each team becomes the only expert on its station"] },
-      { "id": "converge", "label": "Converge: the opening", "duration": 5,
-        "details": ["Five separate discoveries become one combination", "One piece is deliberately missing and the room supplies it together", "The object opens"] },
-      { "id": "reversal", "label": "The Reversal: prepare to inspire", "duration": 5, "is_anchor": true,
-        "details": ["Inside is a rolled message: special guests are arriving", "The real challenge is to inspire a young mind, and there are five minutes", "Competitors become teachers in the space of one sentence"] },
-      { "id": "inspire", "label": "Inspire: the young scientists", "duration": 35,
-        "details": ["One child joins each team of three", "The child does the experiment; the adults build the conditions for discovery", "The adult never takes the materials back", "Then each child presents what they found"] },
-      { "id": "continue", "label": "Continue: the second reveal", "duration": 20,
-        "details": ["Every child receives their own locked object, already locked, combination withheld", "Solve it, reset it, and build a mystery for someone else", "Field book and journal handed over with the kit"] },
-      { "id": "loadout", "label": "Load-out and classroom collections handed over", "duration": 60, "after_close": true,
-        "details": ["Classroom collection handed to each partner organization", "Station kits repacked"] }
+      {
+        "id": "setup",
+        "label": "Load-in and setup",
+        "duration": 120,
+        "before_start": true,
+        "details": [
+          "Station tables laid per pod, five stations each",
+          "Pod locked objects placed with something visibly inside",
+          "Child kits staged out of sight",
+          "Power and lighting checked",
+          "AV and countdown clock where the format needs it"
+        ]
+      },
+      {
+        "id": "arrival",
+        "label": "Participants arrive and are seated",
+        "duration": 15,
+        "details": [
+          "Teams of three, pre-assigned and mixed across departments",
+          "Five teams to a pod"
+        ]
+      },
+      {
+        "id": "mission",
+        "label": "The Mission: the mystery",
+        "duration": 5,
+        "details": [
+          "The locked object is introduced and nothing else is explained",
+          "Five teams take five cases off the table",
+          "No lecture. There is a clock."
+        ]
+      },
+      {
+        "id": "investigate",
+        "label": "Investigate: discovery",
+        "duration": 20,
+        "details": [
+          "Phones encouraged",
+          "Prompts point toward the answer without giving it",
+          "Each team becomes the only expert on its station"
+        ]
+      },
+      {
+        "id": "converge",
+        "label": "Converge: the opening",
+        "duration": 5,
+        "details": [
+          "Five separate discoveries become one combination",
+          "One piece is deliberately missing and the room supplies it together",
+          "The object opens"
+        ]
+      },
+      {
+        "id": "reversal",
+        "label": "The Reversal: prepare to inspire",
+        "duration": 5,
+        "is_anchor": true,
+        "details": [
+          "Inside is a rolled message: special guests are arriving",
+          "The real challenge is to inspire a young mind, and there are five minutes",
+          "Competitors become teachers in the space of one sentence"
+        ]
+      },
+      {
+        "id": "inspire",
+        "label": "Inspire: the young scientists",
+        "duration": 35,
+        "details": [
+          "One child joins each team of three",
+          "The child does the experiment; the adults build the conditions for discovery",
+          "The adult never takes the materials back",
+          "Then each child presents what they found"
+        ]
+      },
+      {
+        "id": "continue",
+        "label": "Continue: the second reveal",
+        "duration": 20,
+        "details": [
+          "Every child receives their own locked object, already locked, combination withheld",
+          "Solve it, reset it, and build a mystery for someone else",
+          "Field book and journal handed over with the kit"
+        ]
+      },
+      {
+        "id": "loadout",
+        "label": "Load-out and classroom collections handed over",
+        "duration": 60,
+        "after_close": true,
+        "details": [
+          "Classroom collection handed to each partner organization",
+          "Station kits repacked"
+        ]
+      }
     ],
     "beneficiary_track": [
-      { "id": "confirm", "label": "Partner organization confirms arrival time, consent, chaperones and transport", "offset_from_reveal": -1440 },
-      { "id": "depart_origin", "label": "Children depart the partner organization", "offset_from_reveal": -60 },
-      { "id": "arrive_venue", "label": "Children arrive and go to the holding area, out of sight of the room", "offset_from_reveal": -30 },
-      { "id": "holding", "label": "Chaperones and Be Legendary staff run the holding area with drinks", "offset_from_reveal": -30, "duration": 25 },
-      { "id": "brief", "label": "Children briefed and lined up outside the room", "offset_from_reveal": -5 },
-      { "id": "enter", "label": "Children enter and join their team of three", "offset_from_reveal": 5 },
-      { "id": "present", "label": "Each child presents what they found", "offset_from_reveal": 30 },
-      { "id": "gear", "label": "Child kits presented: locked object, field book, journal", "offset_from_reveal": 40 },
-      { "id": "return", "label": "Children returned to their chaperones", "offset_from_reveal": 58 },
-      { "id": "depart_venue", "label": "Children depart the venue", "offset_from_reveal": 60 }
+      {
+        "id": "confirm",
+        "label": "Partner organization confirms arrival time, consent, chaperones and transport",
+        "offset_from_reveal": -1440
+      },
+      {
+        "id": "depart_origin",
+        "label": "Children depart the partner organization",
+        "offset_from_reveal": -60
+      },
+      {
+        "id": "arrive_venue",
+        "label": "Children arrive and go to the holding area, out of sight of the room",
+        "offset_from_reveal": -30
+      },
+      {
+        "id": "holding",
+        "label": "Chaperones and Be Legendary staff run the holding area with drinks",
+        "offset_from_reveal": -30,
+        "duration": 25
+      },
+      {
+        "id": "brief",
+        "label": "Children briefed and lined up outside the room",
+        "offset_from_reveal": -5
+      },
+      {
+        "id": "enter",
+        "label": "Children enter and join their team of three",
+        "offset_from_reveal": 5
+      },
+      {
+        "id": "present",
+        "label": "Each child presents what they found",
+        "offset_from_reveal": 30
+      },
+      {
+        "id": "gear",
+        "label": "Child kits presented: locked object, field book, journal",
+        "offset_from_reveal": 40
+      },
+      {
+        "id": "return",
+        "label": "Children returned to their chaperones",
+        "offset_from_reveal": 58
+      },
+      {
+        "id": "depart_venue",
+        "label": "Children depart the venue",
+        "offset_from_reveal": 60
+      }
     ]
   },
-
   "tasks": [
-    { "phase": "1. Lock", "title": "Signed agreement / SOW returned", "offset": -42, "role": "JC" },
-    { "phase": "1. Lock", "title": "Deposit invoice sent", "offset": -42, "role": "JC" },
-    { "phase": "1. Lock", "title": "W-9, COI + vendor onboarding submitted", "offset": -35, "role": "JC" },
-    { "phase": "1. Lock", "title": "Deposit received", "offset": -28, "role": "JC" },
-    { "phase": "1. Lock", "title": "Travel booked for facilitation team", "offset": -21, "role": "JC" },
-
-    { "phase": "2. Design", "title": "Industry variation chosen with the sponsor", "offset": -35, "role": "JC",
-      "note": "Match the subject to what the client's people already respect. This decides the kit, so it gates production." },
-    { "phase": "2. Design", "title": "Sponsor alignment call held (objectives + success measures)", "offset": -35, "role": "JC" },
-    { "phase": "2. Design", "title": "Participant count and pod count confirmed", "offset": -30, "role": "JC",
-      "note": "Pods drive everything: stations, kits, facilitators, AV." },
-    { "phase": "2. Design", "title": "Partner organization(s) recruited and agreed", "offset": -35, "role": "coordinator",
-      "note": "Partner recruitment is the long pole beyond thirty pods, alongside kit production." },
-    { "phase": "2. Design", "title": "Child count confirmed with the partner organization", "offset": -28, "role": "coordinator" },
-    { "phase": "2. Design", "title": "Coordination letter sent to the partner organization", "offset": -28, "role": "coordinator" },
-    { "phase": "2. Design", "title": "Chaperone count and parental consent confirmed", "offset": -21, "role": "coordinator", "condition": "beneficiary_minors" },
-    { "phase": "2. Design", "title": "Child first names and ages received", "offset": -14, "role": "coordinator",
-      "note": "Ages roughly 11 to 13. Younger groups change how the stations are pitched." },
-    { "phase": "2. Design", "title": "Accompanying staff names received", "offset": -14, "role": "coordinator" },
-    { "phase": "2. Design", "title": "Attendee list + team assignments received", "offset": -14, "role": "JC" },
-    { "phase": "2. Design", "title": "Confirm hard departure deadline for the children", "offset": -14, "role": "coordinator",
-      "note": "This single constraint fixes the reversal and therefore every time before it." },
-
-    { "phase": "3. Produce", "title": "Kit production ordered (three-week lead)", "offset": -21, "role": "logistics",
-      "condition": "max(ceil(participants / 15), ceil(beneficiaries / 5)) <= 30",
-      "note": "Three weeks is enough to around thirty pods." },
-    { "phase": "3. Produce", "title": "Kit production ordered (six to eight week lead)", "offset": -56, "role": "logistics",
-      "condition": "max(ceil(participants / 15), ceil(beneficiaries / 5)) > 30",
-      "note": "Beyond thirty pods, kit production and partner recruitment need six to eight weeks." },
-    { "phase": "3. Produce", "title": "Child kits assembled and locked, combinations withheld", "offset": -10, "role": "logistics",
-      "note": "Withholding the combination is the program, not an oversight." },
-    { "phase": "3. Produce", "title": "Classroom collections assembled", "offset": -10, "role": "logistics" },
-    { "phase": "3. Produce", "title": "Child transport booked, confirmation number recorded", "offset": -14, "role": "logistics", "condition": "beneficiary_travels" },
-    { "phase": "3. Produce", "title": "AV, stage and countdown clock booked", "offset": -21, "role": "logistics",
-      "condition": "max(ceil(participants / 15), ceil(beneficiaries / 5)) > 10" },
-    { "phase": "3. Produce", "title": "Room plan confirmed: table depth, power, floor space per pod", "offset": -14, "role": "logistics" },
-    { "phase": "3. Produce", "title": "Dimmable lighting confirmed for the signal station", "offset": -14, "role": "logistics",
+    {
+      "phase": "1. Lock",
+      "title": "Signed agreement / SOW returned",
+      "offset": -42,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "Deposit invoice sent",
+      "offset": -42,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "W-9, COI + vendor onboarding submitted",
+      "offset": -35,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "Deposit received",
+      "offset": -28,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "Travel booked for facilitation team",
+      "offset": -21,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Industry variation chosen with the sponsor",
+      "offset": -35,
+      "role": "JC",
+      "note": "Match the subject to what the client's people already respect. This decides the kit, so it gates production."
+    },
+    {
+      "phase": "2. Design",
+      "title": "Sponsor alignment call held (objectives + success measures)",
+      "offset": -35,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Participant count and pod count confirmed",
+      "offset": -30,
+      "role": "JC",
+      "note": "Pods drive everything: stations, kits, facilitators, AV."
+    },
+    {
+      "phase": "2. Design",
+      "title": "Partner organization(s) recruited and agreed",
+      "offset": -35,
+      "role": "coordinator",
+      "note": "Partner recruitment is the long pole beyond thirty pods, alongside kit production."
+    },
+    {
+      "phase": "2. Design",
+      "title": "Child count confirmed with the partner organization",
+      "offset": -28,
+      "role": "coordinator"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Coordination letter sent to the partner organization",
+      "offset": -28,
+      "role": "coordinator"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Chaperone count and parental consent confirmed",
+      "offset": -21,
+      "role": "coordinator",
+      "condition": "beneficiary_minors"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Child first names and ages received",
+      "offset": -14,
+      "role": "coordinator",
+      "note": "Ages roughly 11 to 13. Younger groups change how the stations are pitched."
+    },
+    {
+      "phase": "2. Design",
+      "title": "Accompanying staff names received",
+      "offset": -14,
+      "role": "coordinator"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Attendee list + team assignments received",
+      "offset": -14,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Confirm hard departure deadline for the children",
+      "offset": -14,
+      "role": "coordinator",
+      "note": "This single constraint fixes the reversal and therefore every time before it."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Kit production ordered (three-week lead)",
+      "offset": -21,
+      "role": "logistics",
+      "condition": "pods <= 30",
+      "note": "Three weeks is enough to around thirty pods."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Kit production ordered (six to eight week lead)",
+      "offset": -56,
+      "role": "logistics",
+      "condition": "pods > 30",
+      "note": "Beyond thirty pods, kit production and partner recruitment need six to eight weeks."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Child kits assembled and locked, combinations withheld",
+      "offset": -10,
+      "role": "logistics",
+      "note": "Withholding the combination is the program, not an oversight."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Classroom collections assembled",
+      "offset": -10,
+      "role": "logistics"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Child transport booked, confirmation number recorded",
+      "offset": -14,
+      "role": "logistics",
+      "condition": "beneficiary_travels"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "AV, stage and countdown clock booked",
+      "offset": -21,
+      "role": "logistics",
+      "condition": "pods > 10"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Room plan confirmed: table depth, power, floor space per pod",
+      "offset": -14,
+      "role": "logistics"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Dimmable lighting confirmed for the signal station",
+      "offset": -14,
+      "role": "logistics",
       "condition": "variation == 'The Long Current'",
-      "note": "The signal station needs the room dimmed." },
-    { "phase": "3. Produce", "title": "Water jugs confirmed, one per pod", "offset": -7, "role": "logistics",
+      "note": "The signal station needs the room dimmed."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Water jugs confirmed, one per pod",
+      "offset": -7,
+      "role": "logistics",
       "condition": "variation == 'Trace Evidence'",
-      "note": "Chromatography. Beyond about forty pods water logistics start to lead the plan." },
-    { "phase": "3. Produce", "title": "Battery check: nothing above 9V", "offset": -7, "role": "logistics",
-      "condition": "variation == 'The Long Current'" },
-    { "phase": "3. Produce", "title": "Pod captains briefed in advance", "offset": -7, "role": "JC",
-      "condition": "max(ceil(participants / 15), ceil(beneficiaries / 5)) > 10",
-      "note": "At conference scale and above the pods run themselves between stage cues." },
-    { "phase": "3. Produce", "title": "Holding area confirmed, out of sight of the main room", "offset": -7, "role": "coordinator",
-      "note": "If the children can be seen before minute thirty-five, the reversal is spoiled." },
-    { "phase": "3. Produce", "title": "Materials shipped; tracking number recorded", "offset": -7, "role": "logistics" },
-    { "phase": "3. Produce", "title": "Run of show approved by sponsor", "offset": -7, "role": "JC" },
-    { "phase": "3. Produce", "title": "Stage timing rehearsed with the AV operator", "offset": -2, "role": "JC", "condition": "stage_led_reversal" },
-    { "phase": "3. Produce", "title": "Materials arrival confirmed at venue", "offset": -2, "role": "logistics" },
-    { "phase": "3. Produce", "title": "Holding room confirmed and sent to the partner organization", "offset": -1, "role": "coordinator" },
-    { "phase": "3. Produce", "title": "Transport reconfirmed with vendor", "offset": -1, "role": "logistics", "condition": "beneficiary_travels" },
-    { "phase": "3. Produce", "title": "Partner organization reconfirmed: arrival time, chaperones, headcount", "offset": -1, "role": "coordinator" },
-
-    { "phase": "4. Deliver", "title": "Delivery day", "offset": 0, "role": "all" },
-    { "phase": "4. Deliver", "title": "Classroom collections handed to each partner organization", "offset": 0, "role": "coordinator" },
-    { "phase": "4. Deliver", "title": "Station kits repacked and inventoried", "offset": 0, "role": "logistics" },
-
-    { "phase": "5. Close", "title": "Thank-you + recap email to sponsor", "offset": 2, "role": "JC" },
-    { "phase": "5. Close", "title": "Thank-you to the partner organization", "offset": 2, "role": "coordinator" },
-    { "phase": "5. Close", "title": "Participant feedback survey sent", "offset": 2, "role": "JC",
-      "note": "Measure it twice: was the child inspired, and was the adult sitting beside them?" },
-    { "phase": "5. Close", "title": "Photographs delivered to client", "offset": 3, "role": "logistics" },
-    { "phase": "5. Close", "title": "Final invoice sent", "offset": 3, "role": "JC" },
-    { "phase": "5. Close", "title": "Contractor invoices received and reconciled", "offset": 7, "role": "JC" },
-    { "phase": "5. Close", "title": "Event P&L closed", "offset": 10, "role": "JC" },
-    { "phase": "5. Close", "title": "Debrief call with sponsor held", "offset": 14, "role": "JC" },
-    { "phase": "5. Close", "title": "Partner organization follow-up: did the collection get used?", "offset": 30, "role": "coordinator",
-      "note": "The collection is meant to turn an afternoon into a term of teaching. Nobody finds out unless someone asks." },
-    { "phase": "5. Close", "title": "Final payment received", "offset": 30, "role": "JC" }
+      "note": "Chromatography. Beyond about forty pods water logistics start to lead the plan."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Battery check: nothing above 9V",
+      "offset": -7,
+      "role": "logistics",
+      "condition": "variation == 'The Long Current'"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Pod captains briefed in advance",
+      "offset": -7,
+      "role": "JC",
+      "condition": "pods > 10",
+      "note": "At conference scale and above the pods run themselves between stage cues."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Holding area confirmed, out of sight of the main room",
+      "offset": -7,
+      "role": "coordinator",
+      "note": "If the children can be seen before minute thirty-five, the reversal is spoiled."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Materials shipped; tracking number recorded",
+      "offset": -7,
+      "role": "logistics"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Run of show approved by sponsor",
+      "offset": -7,
+      "role": "JC"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Stage timing rehearsed with the AV operator",
+      "offset": -2,
+      "role": "JC",
+      "condition": "stage_led_reversal"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Materials arrival confirmed at venue",
+      "offset": -2,
+      "role": "logistics"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Holding room confirmed and sent to the partner organization",
+      "offset": -1,
+      "role": "coordinator"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Transport reconfirmed with vendor",
+      "offset": -1,
+      "role": "logistics",
+      "condition": "beneficiary_travels"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Partner organization reconfirmed: arrival time, chaperones, headcount",
+      "offset": -1,
+      "role": "coordinator"
+    },
+    {
+      "phase": "4. Deliver",
+      "title": "Delivery day",
+      "offset": 0,
+      "role": "all"
+    },
+    {
+      "phase": "4. Deliver",
+      "title": "Classroom collections handed to each partner organization",
+      "offset": 0,
+      "role": "coordinator"
+    },
+    {
+      "phase": "4. Deliver",
+      "title": "Station kits repacked and inventoried",
+      "offset": 0,
+      "role": "logistics"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Thank-you + recap email to sponsor",
+      "offset": 2,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Thank-you to the partner organization",
+      "offset": 2,
+      "role": "coordinator"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Participant feedback survey sent",
+      "offset": 2,
+      "role": "JC",
+      "note": "Measure it twice: was the child inspired, and was the adult sitting beside them?"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Photographs delivered to client",
+      "offset": 3,
+      "role": "logistics"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Final invoice sent",
+      "offset": 3,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Contractor invoices received and reconciled",
+      "offset": 7,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Event P&L closed",
+      "offset": 10,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Debrief call with sponsor held",
+      "offset": 14,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Partner organization follow-up: did the collection get used?",
+      "offset": 30,
+      "role": "coordinator",
+      "note": "The collection is meant to turn an afternoon into a term of teaching. Nobody finds out unless someone asks."
+    },
+    {
+      "phase": "5. Close",
+      "title": "Final payment received",
+      "offset": 30,
+      "role": "JC"
+    }
   ],
-
   "cost_lines": [
-    { "key": "station_kits", "label": "Station kits and consumables", "visibility": "contractor" },
-    { "key": "pod_locks", "label": "Pod locked objects", "visibility": "contractor" },
-    { "key": "child_kits", "label": "Child kits, field books and journals", "visibility": "contractor" },
-    { "key": "classroom_collections", "label": "Classroom collections", "visibility": "contractor" },
-    { "key": "print", "label": "Printed materials", "visibility": "contractor" },
-    { "key": "freight", "label": "Freight and shipping", "visibility": "contractor" },
-    { "key": "child_transport", "label": "Child transport", "visibility": "contractor" },
-    { "key": "av_staging", "label": "AV and staging", "visibility": "contractor" },
-    { "key": "facilitation", "label": "Facilitation crew", "visibility": "contractor" },
-    { "key": "photography", "label": "Photography", "visibility": "contractor" },
-    { "key": "venue_charges", "label": "Venue charges", "visibility": "contractor" },
-    { "key": "travel", "label": "Facilitation team travel", "visibility": "contractor" },
-    { "key": "contractor_fees", "label": "Contractor fees", "visibility": "contractor" },
-    { "key": "client_fee", "label": "Client fee", "visibility": "owner" },
-    { "key": "margin", "label": "Gross margin", "visibility": "owner", "computed": "client_fee - sum(all contractor-visible lines)" }
+    {
+      "key": "station_kits",
+      "label": "Station kits and consumables",
+      "visibility": "contractor"
+    },
+    {
+      "key": "pod_locks",
+      "label": "Pod locked objects",
+      "visibility": "contractor"
+    },
+    {
+      "key": "child_kits",
+      "label": "Child kits, field books and journals",
+      "visibility": "contractor"
+    },
+    {
+      "key": "classroom_collections",
+      "label": "Classroom collections",
+      "visibility": "contractor"
+    },
+    {
+      "key": "print",
+      "label": "Printed materials",
+      "visibility": "contractor"
+    },
+    {
+      "key": "freight",
+      "label": "Freight and shipping",
+      "visibility": "contractor"
+    },
+    {
+      "key": "child_transport",
+      "label": "Child transport",
+      "visibility": "contractor"
+    },
+    {
+      "key": "av_staging",
+      "label": "AV and staging",
+      "visibility": "contractor"
+    },
+    {
+      "key": "facilitation",
+      "label": "Facilitation crew",
+      "visibility": "contractor"
+    },
+    {
+      "key": "photography",
+      "label": "Photography",
+      "visibility": "contractor"
+    },
+    {
+      "key": "venue_charges",
+      "label": "Venue charges",
+      "visibility": "contractor"
+    },
+    {
+      "key": "travel",
+      "label": "Facilitation team travel",
+      "visibility": "contractor"
+    },
+    {
+      "key": "contractor_fees",
+      "label": "Contractor fees",
+      "visibility": "contractor"
+    },
+    {
+      "key": "client_fee",
+      "label": "Client fee",
+      "visibility": "owner"
+    },
+    {
+      "key": "margin",
+      "label": "Gross margin",
+      "visibility": "owner",
+      "computed": "client_fee - sum(all contractor-visible lines)"
+    }
   ],
-
   "documents": [
     {
       "key": "partner-letter",
@@ -225,62 +917,105 @@
       "send_offset": -28,
       "greeting": "Hello {{beneficiary_contact_name}},",
       "sections": [
-        { "body": [
-          "It was a pleasure speaking with you about our {{name}} program. We are very excited to have the {{beneficiary_org}} involved.",
-          "Here are some details for you..."
-        ]},
-        { "heading": "WHEN", "body": [
-          "{{delivery_date}}",
-          "Children arrive on site at {{arrive_venue_time}} and depart at approximately {{depart_venue_time}}",
-          "They are in the room with the adults from {{enter_time}}"
-        ]},
-        { "heading": "WHERE", "body": [
-          "{{venue_name}}",
-          "{{venue_address}}",
-          "{{venue_phone}}",
-          "The holding area is {{holding_room}}. I will be in touch the day before and the day of the event to confirm."
-        ]},
-        { "heading": "WHO", "body": [
-          "{{client_descriptor}} is running a {{format}} for {{participants}} people. {{name}} is the session, and the children are the reason it works.",
-          "We are asking for {{beneficiaries}} young scientists, roughly {{age_min}} to {{age_max}} years old. Each child joins a team of three adults, so there are three adults for every child."
-        ]},
-        { "heading": "WHAT THE CHILDREN WILL DO", "body": [
-          "For the first thirty minutes the adults work on a science mystery without knowing the children are coming. Then a locked object opens and they find out that the real challenge is to inspire a young mind.",
-          "Your young scientists then join the teams. The child does the experiment; the adults build the conditions for discovery and never take the materials back. Each child presents what they found to the room.",
-          "This variation is {{variation}}."
-        ]},
-        { "heading": "WHAT EVERY CHILD TAKES HOME", "body": [
-          "Every child leaves with their own reusable field case holding their own locked object, already locked, with the combination withheld. Inside are five secrets, one per station. They solve them, work out the last one, and open it.",
-          "With it travels a field book carrying each experiment rebuilt from household objects, and a journal whose first page reads: scientists don't just collect answers, they collect questions.",
-          "The instruction that matters is the last one. Reset the lock, choose a new combination, and build a mystery for a brother, a friend, a classroom."
-        ]},
-        { "heading": "WHAT THE {{beneficiary_org}} KEEPS", "body": [
-          "The children in the room should not be the only beneficiaries. Your organization receives a classroom collection: additional locked objects, the full stories, the science behind each one, the station kits themselves, consumables to run the sequence repeatedly through the year, a facilitator guide, and further experiments that extend past the day.",
-          "This is what turns a corporate afternoon into a term of science teaching."
-        ]},
-        { "heading": "WHAT WE NEED FROM YOU", "ordered": true, "bullets": [
-          "{{beneficiaries}} children, roughly {{age_min}} to {{age_max}} years old.",
-          "Their first names and ages once your list is set.",
-          "The names of the staff who will accompany them.",
-          "Parental consent for each child.",
-          "Arrival at {{arrive_venue_time}}. The timing matters: if the children are seen before the adults open the locked object, the moment the whole program turns on is lost."
-        ]},
-        { "heading": "TRANSPORT", "condition": "beneficiary_travels", "body": [
-          "We are expecting {{beneficiary_transport_by}} to provide transportation of the children to and from the venue."
-        ]},
-        { "heading": "ON ARRIVAL", "body": [
-          "{{greeter_name}} will meet you and walk you to the holding area. We will provide drinks for the children while they wait, and our staff will brief them on what is about to happen.",
-          "The children should be on their way by approximately {{depart_venue_time}}."
-        ]},
-        { "heading": "A NOTE ON THE CHILDREN", "condition": "beneficiary_minors", "body": [
-          "The {{beneficiary_org}} retains legal custody and responsibility for the children throughout the event. Be Legendary staff supervise the children while they are in our care at the venue, in coordination with your staff. Please plan to have your staff with the children at all times."
-        ]},
-        { "heading": "THANK YOU", "body": [
-          "Thank you so much for being a part of this. The adults in that room came to be inspired by each other and leave inspired by your young people instead, which is the part nobody predicts.",
-          "Please don't hesitate to contact me with any questions or concerns."
-        ]}
+        {
+          "body": [
+            "It was a pleasure speaking with you about our {{name}} program. We are very excited to have the {{beneficiary_org}} involved.",
+            "Here are some details for you..."
+          ]
+        },
+        {
+          "heading": "WHEN",
+          "body": [
+            "{{delivery_date}}",
+            "Children arrive on site at {{arrive_venue_time}} and depart at approximately {{depart_venue_time}}",
+            "They are in the room with the adults from {{enter_time}}"
+          ]
+        },
+        {
+          "heading": "WHERE",
+          "body": [
+            "{{venue_name}}",
+            "{{venue_address}}",
+            "{{venue_phone}}",
+            "The holding area is {{holding_room}}. I will be in touch the day before and the day of the event to confirm."
+          ]
+        },
+        {
+          "heading": "WHO",
+          "body": [
+            "{{client_descriptor}} is running a {{format}} for {{participants}} people. {{name}} is the session, and the children are the reason it works.",
+            "We are asking for {{beneficiaries}} young scientists, roughly {{age_min}} to {{age_max}} years old. Each child joins a team of three adults, so there are three adults for every child."
+          ]
+        },
+        {
+          "heading": "WHAT THE CHILDREN WILL DO",
+          "body": [
+            "For the first thirty minutes the adults work on a science mystery without knowing the children are coming. Then a locked object opens and they find out that the real challenge is to inspire a young mind.",
+            "Your young scientists then join the teams. The child does the experiment; the adults build the conditions for discovery and never take the materials back. Each child presents what they found to the room.",
+            "This variation is {{variation}}."
+          ]
+        },
+        {
+          "heading": "WHAT EVERY CHILD TAKES HOME",
+          "body": [
+            "Every child leaves with their own reusable field case holding their own locked object, already locked, with the combination withheld. Inside are five secrets, one per station. They solve them, work out the last one, and open it.",
+            "With it travels a field book carrying each experiment rebuilt from household objects, and a journal whose first page reads: scientists don't just collect answers, they collect questions.",
+            "The instruction that matters is the last one. Reset the lock, choose a new combination, and build a mystery for a brother, a friend, a classroom."
+          ]
+        },
+        {
+          "heading": "WHAT THE {{beneficiary_org}} KEEPS",
+          "body": [
+            "The children in the room should not be the only beneficiaries. Your organization receives a classroom collection: additional locked objects, the full stories, the science behind each one, the station kits themselves, consumables to run the sequence repeatedly through the year, a facilitator guide, and further experiments that extend past the day.",
+            "This is what turns a corporate afternoon into a term of science teaching."
+          ]
+        },
+        {
+          "heading": "WHAT WE NEED FROM YOU",
+          "ordered": true,
+          "bullets": [
+            "{{beneficiaries}} children, roughly {{age_min}} to {{age_max}} years old.",
+            "Their first names and ages once your list is set.",
+            "The names of the staff who will accompany them.",
+            "Parental consent for each child.",
+            "Arrival at {{arrive_venue_time}}. The timing matters: if the children are seen before the adults open the locked object, the moment the whole program turns on is lost."
+          ]
+        },
+        {
+          "heading": "TRANSPORT",
+          "condition": "beneficiary_travels",
+          "body": [
+            "We are expecting {{beneficiary_transport_by}} to provide transportation of the children to and from the venue."
+          ]
+        },
+        {
+          "heading": "ON ARRIVAL",
+          "body": [
+            "{{greeter_name}} will meet you and walk you to the holding area. We will provide drinks for the children while they wait, and our staff will brief them on what is about to happen.",
+            "The children should be on their way by approximately {{depart_venue_time}}."
+          ]
+        },
+        {
+          "heading": "A NOTE ON THE CHILDREN",
+          "condition": "beneficiary_minors",
+          "body": [
+            "The {{beneficiary_org}} retains legal custody and responsibility for the children throughout the event. Be Legendary staff supervise the children while they are in our care at the venue, in coordination with your staff. Please plan to have your staff with the children at all times."
+          ]
+        },
+        {
+          "heading": "THANK YOU",
+          "body": [
+            "Thank you so much for being a part of this. The adults in that room came to be inspired by each other and leave inspired by your young people instead, which is the part nobody predicts.",
+            "Please don't hesitate to contact me with any questions or concerns."
+          ]
+        }
       ],
-      "signoff": ["{{sender_name}}", "{{sender_title}}", "{{sender_phone}}", "{{sender_email}}"]
+      "signoff": [
+        "{{sender_name}}",
+        "{{sender_title}}",
+        "{{sender_phone}}",
+        "{{sender_email}}"
+      ]
     }
   ]
 }

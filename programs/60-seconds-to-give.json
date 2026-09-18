@@ -1,0 +1,561 @@
+{
+  "code": "60S",
+  "name": "60 Seconds to Give",
+  "family": "give-back-game-show",
+  "summary": "A high-energy give-back game show for 25 to 500 people. Teams race sixty-second challenges, and every win triggers a real donation to causes the client chooses.",
+  "source": "Modeled from the Be Legendary Experience Information 2026 catalogue: the description and the 25-500 headcount band. No beneficiary group arrives on site, so this program has no reveal. Durations and quantities below are inferred and marked as such.",
+  "parameters": [
+    {
+      "key": "participants",
+      "label": "Participants",
+      "type": "int",
+      "required": true,
+      "help": "The catalogue band is 25 to 500."
+    },
+    {
+      "key": "teams",
+      "label": "Teams",
+      "type": "int",
+      "required": true
+    },
+    {
+      "key": "beneficiaries",
+      "label": "Beneficiaries on site",
+      "type": "int",
+      "default": 0,
+      "help": "Zero. Nobody arrives; the donation goes to the causes the client picks."
+    },
+    {
+      "key": "causes",
+      "label": "Number of causes",
+      "type": "int",
+      "default": 3,
+      "help": "The client chooses them. Each needs a named recipient before the day."
+    },
+    {
+      "key": "rounds",
+      "label": "Challenge rounds",
+      "type": "int",
+      "default": 8
+    },
+    {
+      "key": "donation_per_win",
+      "label": "Donation per win (USD)",
+      "type": "number",
+      "default": 0,
+      "help": "Drives the donation ceiling the sponsor is committing to. Zero until the scoring rule is agreed in writing."
+    },
+    {
+      "key": "beneficiary_org",
+      "label": "Primary cause",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "stage_led",
+      "label": "Stage-led with a host on mic",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "key": "event_start",
+      "label": "Participant arrival time",
+      "type": "time",
+      "required": true
+    },
+    {
+      "key": "client_descriptor",
+      "label": "How to describe the client",
+      "type": "text",
+      "default": "A company"
+    },
+    {
+      "key": "venue_phone",
+      "label": "Venue phone",
+      "type": "text"
+    },
+    {
+      "key": "sender_name",
+      "label": "Letter signed by",
+      "type": "text",
+      "default": "James Carter"
+    },
+    {
+      "key": "sender_title",
+      "label": "Signer title",
+      "type": "text",
+      "default": "Founder and CEO, Be Legendary"
+    },
+    {
+      "key": "sender_phone",
+      "label": "Signer phone",
+      "type": "text",
+      "default": "775-980-5703"
+    },
+    {
+      "key": "sender_email",
+      "label": "Signer email",
+      "type": "text",
+      "default": "jcarter@repario.com"
+    }
+  ],
+  "derived": {
+    "max_donation": "rounds * max(1, causes) * donation_per_win"
+  },
+  "quantities": [
+    {
+      "item": "Team challenge kits",
+      "formula": "teams",
+      "basis": "one per team",
+      "confidence": "medium"
+    },
+    {
+      "item": "Challenge sets",
+      "formula": "rounds",
+      "basis": "one per round",
+      "confidence": "medium"
+    },
+    {
+      "item": "Scoreboards",
+      "formula": "max(1, ceil(teams / 12))",
+      "basis": "one per zone",
+      "confidence": "low",
+      "note": "Not stated. Confirm how scoring is displayed at the top of the headcount band."
+    },
+    {
+      "item": "Client brief sheets",
+      "formula": "participants",
+      "basis": "one per participant",
+      "confidence": "medium"
+    },
+    {
+      "item": "Hosts on mic",
+      "formula": "1",
+      "basis": "one host",
+      "confidence": "medium"
+    },
+    {
+      "item": "Facilitators",
+      "formula": "max(1, ceil(teams / 8))",
+      "basis": "roaming, one per eight teams",
+      "confidence": "low",
+      "note": "Inferred from the Inspiring Minds staffing pattern. Confirm."
+    },
+    {
+      "item": "Donation ceiling (USD)",
+      "formula": "max_donation",
+      "basis": "rounds x causes x donation per win",
+      "confidence": "low",
+      "note": "This is the number the sponsor is committing to. Confirm the scoring rule before quoting it."
+    }
+  ],
+  "resources": [
+    {
+      "key": "venue",
+      "label": "Venue",
+      "always": true,
+      "fields": [
+        "name",
+        "address",
+        "contact_name",
+        "contact_phone",
+        "room",
+        "stage_notes",
+        "av_notes"
+      ]
+    },
+    {
+      "key": "av_and_staging",
+      "label": "AV and staging",
+      "always": true,
+      "fields": [
+        "vendor",
+        "contact",
+        "mic_type",
+        "countdown_clock",
+        "scoreboard",
+        "stage_notes",
+        "cost"
+      ],
+      "note": "A sixty-second format lives or dies on a visible clock and audible cues."
+    },
+    {
+      "key": "causes",
+      "label": "Causes and recipients",
+      "always": true,
+      "fields": [
+        "cause_names",
+        "recipient_contacts",
+        "donation_mechanism",
+        "confirmation"
+      ],
+      "note": "Every cause needs a named recipient and an agreed mechanism before the day, or the donation is a promise rather than a transfer."
+    },
+    {
+      "key": "photography",
+      "label": "Photography",
+      "always": true,
+      "fields": [
+        "photographer",
+        "contact",
+        "cost"
+      ]
+    }
+  ],
+  "run_of_show": {
+    "anchor": "totals",
+    "anchor_rule": "This program has no beneficiary reveal, because nobody arrives. The anchor is the moment the totals are read out, and the schedule always runs forward from participant arrival.",
+    "main_track": [
+      {
+        "id": "setup",
+        "label": "Setup",
+        "duration": 90,
+        "before_start": true,
+        "details": [
+          "Team tables and challenge kits staged",
+          "Stage, mic, countdown clock and scoreboard tested"
+        ]
+      },
+      {
+        "id": "arrival",
+        "label": "Participants arrive and are seated",
+        "duration": 15,
+        "details": [
+          "Teams pre-assigned"
+        ]
+      },
+      {
+        "id": "opening",
+        "label": "Opening remarks: client executive",
+        "duration": 5
+      },
+      {
+        "id": "brief",
+        "label": "Host sets the format and the stakes",
+        "duration": 10,
+        "details": [
+          "Every win triggers a real donation",
+          "The causes are named up front"
+        ]
+      },
+      {
+        "id": "rounds",
+        "label": "Sixty-second challenge rounds",
+        "duration": 55,
+        "details": [
+          "Teams race the clock",
+          "Running donation total on the scoreboard"
+        ]
+      },
+      {
+        "id": "totals",
+        "label": "The totals are read out",
+        "duration": 10,
+        "is_anchor": true,
+        "details": [
+          "What the room raised, by cause"
+        ]
+      },
+      {
+        "id": "debrief",
+        "label": "Debrief and close: client executive",
+        "duration": 10
+      },
+      {
+        "id": "loadout",
+        "label": "Load-out",
+        "duration": 45,
+        "after_close": true
+      }
+    ],
+    "beneficiary_track": []
+  },
+  "tasks": [
+    {
+      "phase": "1. Lock",
+      "title": "Signed agreement / SOW returned",
+      "offset": -30,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "Deposit invoice sent",
+      "offset": -30,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "W-9, COI + vendor onboarding submitted",
+      "offset": -25,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "Deposit received",
+      "offset": -21,
+      "role": "JC"
+    },
+    {
+      "phase": "1. Lock",
+      "title": "Travel booked for facilitation team",
+      "offset": -21,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Sponsor alignment call held (objectives + success measures)",
+      "offset": -25,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Connection Points agreed with the sponsor",
+      "offset": -21,
+      "role": "JC",
+      "note": "Customized to the client's objectives through Connection Points woven into the build."
+    },
+    {
+      "phase": "2. Design",
+      "title": "Participant count and team count confirmed",
+      "offset": -21,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Nonprofit partner matched and agreed",
+      "offset": -25,
+      "role": "coordinator",
+      "note": "Benefits a vetted local nonprofit matched to the experience and the client's market."
+    },
+    {
+      "phase": "2. Design",
+      "title": "Attendee list + roles received",
+      "offset": -14,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Content outline drafted",
+      "offset": -14,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Content outline approved by sponsor",
+      "offset": -10,
+      "role": "JC"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Team challenge kits ordered and ship date confirmed",
+      "offset": -21,
+      "role": "logistics",
+      "note": "The catalogue states four to twelve weeks' lead time is ideal. Offsets here sit at the short end; a larger room needs the long end."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Run-of-show drafted",
+      "offset": -10,
+      "role": "JC"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "AV + room requirements confirmed with venue",
+      "offset": -7,
+      "role": "logistics"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Run of show approved by sponsor",
+      "offset": -7,
+      "role": "JC"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Slides and media final",
+      "offset": -5,
+      "role": "JC"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Materials shipped; tracking number recorded",
+      "offset": -7,
+      "role": "logistics"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Materials arrival confirmed at venue",
+      "offset": -2,
+      "role": "logistics"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Final logistics email to sponsor",
+      "offset": -3,
+      "role": "JC"
+    },
+    {
+      "phase": "4. Deliver",
+      "title": "Delivery day",
+      "offset": 0,
+      "role": "all"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Thank-you + recap email to sponsor",
+      "offset": 2,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Participant feedback survey sent",
+      "offset": 2,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Photographs delivered to client",
+      "offset": 3,
+      "role": "logistics"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Final invoice sent",
+      "offset": 3,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Contractor invoices received and reconciled",
+      "offset": 7,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Event P&L closed",
+      "offset": 10,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Debrief call with sponsor held",
+      "offset": 14,
+      "role": "JC"
+    },
+    {
+      "phase": "5. Close",
+      "title": "Final payment received",
+      "offset": 30,
+      "role": "JC"
+    },
+    {
+      "phase": "2. Design",
+      "title": "Causes chosen by the client and recipients named",
+      "offset": -21,
+      "role": "JC",
+      "note": "A cause without a named recipient and an agreed transfer mechanism is a promise, not a donation."
+    },
+    {
+      "phase": "2. Design",
+      "title": "Scoring rule and donation per win agreed in writing",
+      "offset": -21,
+      "role": "JC",
+      "note": "This sets the ceiling the sponsor is committing to. Agree it before quoting."
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Host briefed and script rehearsed",
+      "offset": -5,
+      "role": "JC",
+      "condition": "stage_led"
+    },
+    {
+      "phase": "3. Produce",
+      "title": "Countdown clock and scoreboard tested on site",
+      "offset": -1,
+      "role": "logistics",
+      "note": "A sixty-second format with an unreliable clock has no format."
+    },
+    {
+      "phase": "5. Close",
+      "title": "Donations transferred and receipts obtained",
+      "offset": 7,
+      "role": "JC",
+      "note": "The commitment made on stage. Nothing else in this program matters if this slips."
+    },
+    {
+      "phase": "5. Close",
+      "title": "Donation confirmation sent to the sponsor",
+      "offset": 10,
+      "role": "JC"
+    }
+  ],
+  "cost_lines": [
+    {
+      "key": "materials",
+      "label": "Materials and donated goods",
+      "visibility": "contractor"
+    },
+    {
+      "key": "donations",
+      "label": "Donations triggered",
+      "visibility": "contractor"
+    },
+    {
+      "key": "av_staging",
+      "label": "AV, stage, clock and scoreboard",
+      "visibility": "contractor"
+    },
+    {
+      "key": "host",
+      "label": "Host",
+      "visibility": "contractor"
+    },
+    {
+      "key": "print",
+      "label": "Printed materials",
+      "visibility": "contractor"
+    },
+    {
+      "key": "freight",
+      "label": "Freight and shipping",
+      "visibility": "contractor"
+    },
+    {
+      "key": "venue_av",
+      "label": "Venue and AV charges",
+      "visibility": "contractor"
+    },
+    {
+      "key": "facilitation",
+      "label": "Facilitation crew",
+      "visibility": "contractor"
+    },
+    {
+      "key": "photography",
+      "label": "Photography",
+      "visibility": "contractor"
+    },
+    {
+      "key": "travel",
+      "label": "Facilitation team travel",
+      "visibility": "contractor"
+    },
+    {
+      "key": "contractor_fees",
+      "label": "Contractor fees",
+      "visibility": "contractor"
+    },
+    {
+      "key": "client_fee",
+      "label": "Client fee",
+      "visibility": "owner"
+    },
+    {
+      "key": "margin",
+      "label": "Gross margin",
+      "visibility": "owner",
+      "computed": "client_fee - sum(all contractor-visible lines)"
+    }
+  ]
+}

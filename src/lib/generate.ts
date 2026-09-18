@@ -8,7 +8,7 @@
  * Validated against two real events. See generate.test.ts.
  */
 
-import { evalBoolean, evalNumber, type Context } from "./expr";
+import { evalBoolean, evalNumber, evaluate, type Context } from "./expr";
 import type {
   EngagementParams,
   GeneratedQuantity,
@@ -67,8 +67,27 @@ export function buildContext(params: EngagementParams, program?: Program): Conte
       ctx[k] = v;
     }
   }
-  // Derived: one bicycle per child plus two spares.
-  ctx.bikes = params.beneficiaries + 2;
+
+  // Program-declared derived values, in order, so a later one can use an
+  // earlier one.
+  //
+  // A failure here is fatal and says why. Skipping it silently was worse: the
+  // derived name then looked unknown to every formula that used it, so a
+  // missing parameter was reported as a missing derived value and the actual
+  // cause was two steps away. A derived formula that references a parameter
+  // with no value is a template bug, and the message should name both.
+  for (const [key, formula] of Object.entries(program?.derived ?? {})) {
+    try {
+      ctx[key] = evaluate(formula, ctx);
+    } catch (e) {
+      throw new Error(
+        `program ${program?.code ?? "?"}: derived value "${key}" could not be computed ` +
+          `from "${formula}": ${e instanceof Error ? e.message : String(e)}. ` +
+          `Give the parameter it needs a default, or guard the formula.`,
+      );
+    }
+  }
+
   return ctx;
 }
 

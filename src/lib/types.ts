@@ -122,6 +122,16 @@ export interface Program {
   summary?: string;
   source?: string;
   parameters: ProgramParameter[];
+  /**
+   * Named values computed from the parameters, available to every formula and
+   * condition. Evaluated in declaration order, so a later one may use an
+   * earlier one.
+   *
+   * This exists so program-specific arithmetic stays in the program. `bikes`
+   * was once hard-coded in the engine, which was fine while Build A Dream was
+   * the only program and wrong the moment it was not.
+   */
+  derived?: Record<string, string>;
   quantities: QuantityRule[];
   resources: ResourceRule[];
   run_of_show: {
