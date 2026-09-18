@@ -96,6 +96,12 @@
       "required": true
     },
     {
+      "key": "session_minutes",
+      "label": "Session length (minutes)",
+      "type": "int",
+      "help": "Typically 90 to 180 minutes; 120 is very typical. Leave blank to run at the program's natural length of 105 minutes. Fixed steps such as the reveal keep their length; the content block, the build and the debrief absorb the difference."
+    },
+    {
       "key": "beneficiary_depart_by",
       "label": "Hard deadline: children must depart by",
       "type": "time",
@@ -383,6 +389,7 @@
         "id": "arrival",
         "label": "Participants arrive and are seated",
         "duration": 15,
+        "fixed": true,
         "details": [
           "Teams of three, pre-assigned and mixed across departments",
           "Five teams to a pod"
@@ -392,6 +399,7 @@
         "id": "mission",
         "label": "The Mission: the mystery",
         "duration": 5,
+        "fixed": true,
         "details": [
           "The locked object is introduced and nothing else is explained",
           "Five teams take five cases off the table",
@@ -402,6 +410,7 @@
         "id": "investigate",
         "label": "Investigate: discovery",
         "duration": 20,
+        "min": 10,
         "details": [
           "Phones encouraged",
           "Prompts point toward the answer without giving it",
@@ -412,6 +421,7 @@
         "id": "converge",
         "label": "Converge: the opening",
         "duration": 5,
+        "fixed": true,
         "details": [
           "Five separate discoveries become one combination",
           "One piece is deliberately missing and the room supplies it together",
@@ -422,6 +432,7 @@
         "id": "reversal",
         "label": "The Reversal: prepare to inspire",
         "duration": 5,
+        "fixed": true,
         "is_anchor": true,
         "details": [
           "Inside is a rolled message: special guests are arriving",
@@ -433,6 +444,7 @@
         "id": "inspire",
         "label": "Inspire: the young scientists",
         "duration": 35,
+        "min": 20,
         "details": [
           "One child joins each team of three",
           "The child does the experiment; the adults build the conditions for discovery",
@@ -444,6 +456,7 @@
         "id": "continue",
         "label": "Continue: the second reveal",
         "duration": 20,
+        "min": 10,
         "details": [
           "Every child receives their own locked object, already locked, combination withheld",
           "Solve it, reset it, and build a mystery for someone else",

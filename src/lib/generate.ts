@@ -17,6 +17,7 @@ import type {
   Program,
   RunOfShow,
   RunOfShowOverrides,
+  RunOfShowStep,
   ScheduledBeneficiaryStep,
   ScheduledStep,
 } from "./types";
@@ -98,12 +99,98 @@ export function buildContext(params: EngagementParams, program?: Program): Conte
  */
 const DEFAULT_REVEAL_TO_DEPARTURE = 30;
 
+
+/**
+ * Fit the schedule to a requested session length.
+ *
+ * Events run anywhere from 90 to 180 minutes and 120 is typical, so the length
+ * is an engagement input rather than a property of the template. Fixed steps
+ * keep their duration and the difference is distributed across the elastic ones
+ * in proportion to their natural length: a longer event means a longer content
+ * block, a longer build and a longer debrief, not a longer human tunnel.
+ *
+ * Scaling only happens when an engagement asks for a length. Left unset, the
+ * program runs at its natural length and the arithmetic below never executes,
+ * so an existing engagement's times cannot move underneath it.
+ */
+function fitToSessionLength(
+  steps: RunOfShowStep[],
+  target: number,
+  programCode: string,
+): RunOfShowStep[] {
+  const scheduled = steps.filter((s) => !s.before_start && !s.after_close);
+  const natural = scheduled.reduce((n, s) => n + s.duration, 0);
+  if (target === natural) return steps;
+
+  const minOf = (s: RunOfShowStep) => Math.max(1, s.min ?? 1);
+  const elastic = scheduled.filter((s) => !s.fixed);
+  const fixedTotal = scheduled.filter((s) => s.fixed).reduce((n, s) => n + s.duration, 0);
+  const floor = fixedTotal + elastic.reduce((n, s) => n + minOf(s), 0);
+
+  if (elastic.length === 0) {
+    throw new Error(
+      `program ${programCode} has no elastic steps, so it cannot be fitted to ` +
+        `${target} minutes. Its length is fixed at ${natural}.`,
+    );
+  }
+  if (target < floor) {
+    throw new Error(
+      `${target} minutes is below this program's floor of ${floor}: ` +
+        `${fixedTotal} minutes of fixed steps plus the minimum for each elastic step.`,
+    );
+  }
+
+  const out = new Map<string, number>();
+  let pool = elastic;
+  let slack = target - fixedTotal;
+
+  // Water-filling. A step whose proportional share lands below its own minimum
+  // is pinned at that minimum and leaves the pool, and the steps still in the
+  // pool share out what is left. One pass is not enough: pinning a step spends
+  // more than its proportional share, which shrinks the slack available to the
+  // others and can push the next one under its minimum in turn.
+  //
+  // The loop always terminates. Because target >= floor, the slack remaining
+  // is never less than the sum of the minimums still in the pool, so the shares
+  // cannot all be below their minimums at once and at least one step survives
+  // each pass.
+  for (;;) {
+    const poolTotal = pool.reduce((n, s) => n + s.duration, 0);
+    const under = pool.filter((s) => (s.duration / poolTotal) * slack < minOf(s));
+    if (under.length === 0) break;
+    for (const s of under) {
+      out.set(s.id, minOf(s));
+      slack -= minOf(s);
+    }
+    pool = pool.filter((s) => !out.has(s.id));
+  }
+
+  const poolTotal = pool.reduce((n, s) => n + s.duration, 0);
+  let assigned = 0;
+  for (const s of pool) {
+    const share = Math.floor((s.duration / poolTotal) * slack);
+    out.set(s.id, share);
+    assigned += share;
+  }
+
+  // Flooring loses a few minutes. Give them to the longest step still in the
+  // pool so the total lands exactly on the requested length. Only ever adds, so
+  // it cannot push a step back under its minimum.
+  const remainder = slack - assigned;
+  if (remainder > 0) {
+    const biggest = [...pool].sort((a, b) => b.duration - a.duration)[0]!;
+    out.set(biggest.id, (out.get(biggest.id) ?? 0) + remainder);
+  }
+
+  return steps.map((s) => (out.has(s.id) ? { ...s, duration: out.get(s.id)! } : s));
+}
+
 /**
  * Compute both tracks.
  *
  * If the engagement has a hard beneficiary departure deadline, the reveal is
- * pinned at `deadline - 30` and every pre-reveal step is laid out backward from
- * it. This is the rule stated in prose on the Ledgebrook run of show: the
+ * pinned at `deadline - reveal_to_departure` and every pre-reveal step is laid
+ * out backward from it. This is the rule stated in prose on the Ledgebrook run of show: the
  * children being gone by 5:00 fixes the reveal at 4:30 and sets the length of
  * everything ahead of it.
  *
@@ -117,9 +204,16 @@ export function computeRunOfShow(
   const skip = new Set(overrides.skip ?? []);
   const durations = overrides.durations ?? {};
 
-  const steps = program.run_of_show.main_track
+  let steps = program.run_of_show.main_track
     .filter((s) => !skip.has(s.id))
     .map((s) => ({ ...s, duration: durations[s.id] ?? s.duration }));
+
+  // Applied after per-step overrides, so an explicit duration is the starting
+  // point for the fit rather than being overwritten by it.
+  const requested = params.session_minutes;
+  if (typeof requested === "number" && Number.isFinite(requested)) {
+    steps = fitToSessionLength(steps, requested, program.code);
+  }
 
   const anchorIdx = steps.findIndex((s) => s.is_anchor);
   if (anchorIdx === -1) throw new Error(`program ${program.code} has no anchor step`);
@@ -171,6 +265,7 @@ export function computeRunOfShow(
 
   const scheduled = main.filter((s) => !s.before_start && !s.after_close);
   const close = scheduled.length ? scheduled[scheduled.length - 1]!.end : start;
+  basis += `. The session runs ${close - start} minutes`;
 
   return { start, reveal, close, basis, anchoredBackward, main, beneficiary };
 }

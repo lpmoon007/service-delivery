@@ -76,6 +76,12 @@
       "required": true
     },
     {
+      "key": "session_minutes",
+      "label": "Session length (minutes)",
+      "type": "int",
+      "help": "Typically 90 to 180 minutes; 120 is very typical. Leave blank to run at the program's natural length of 97 minutes. Fixed steps such as the reveal keep their length; the content block, the build and the debrief absorb the difference."
+    },
+    {
       "key": "beneficiary_depart_by",
       "label": "Hard deadline: animals must depart by",
       "type": "time",
@@ -289,6 +295,7 @@
         "id": "arrival",
         "label": "Participants arrive and are seated",
         "duration": 10,
+        "fixed": true,
         "details": [
           "Teams pre-assigned and mixed across departments"
         ]
@@ -296,12 +303,14 @@
       {
         "id": "opening",
         "label": "Opening remarks: client executive",
-        "duration": 5
+        "duration": 5,
+        "fixed": true
       },
       {
         "id": "content",
         "label": "Be Legendary content block",
         "duration": 15,
+        "min": 10,
         "details": [
           "Connection Points woven in per the sponsor's objectives"
         ]
@@ -310,6 +319,7 @@
         "id": "build",
         "label": "Build the animal homes",
         "duration": 25,
+        "min": 15,
         "details": [
           "One home per team",
           "Build instructions and client brief sheet issued",
@@ -320,12 +330,14 @@
         "id": "reveal",
         "label": "The Reveal: the group hits its goal and the animals arrive",
         "duration": 5,
+        "fixed": true,
         "is_anchor": true
       },
       {
         "id": "present",
         "label": "Teams meet the animals and present the homes",
         "duration": 15,
+        "min": 10,
         "details": [
           "Handlers stay with the animals throughout",
           "Roaming photography"
@@ -334,17 +346,20 @@
       {
         "id": "photo",
         "label": "Group photograph",
-        "duration": 5
+        "duration": 5,
+        "fixed": true
       },
       {
         "id": "reset",
         "label": "Room reset for the debrief",
-        "duration": 3
+        "duration": 3,
+        "fixed": true
       },
       {
         "id": "debrief",
         "label": "Debrief, facilitated",
         "duration": 10,
+        "min": 5,
         "details": [
           "What happened, so what, now what"
         ]
@@ -352,7 +367,8 @@
       {
         "id": "close",
         "label": "Close: client executive",
-        "duration": 4
+        "duration": 4,
+        "fixed": true
       },
       {
         "id": "loadout",

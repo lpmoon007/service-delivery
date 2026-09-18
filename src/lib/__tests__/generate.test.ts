@@ -10,7 +10,7 @@ import {
   parseTime,
   resolveResources,
 } from "../generate";
-import type { Program } from "../types";
+import type { Program, RunOfShow } from "../types";
 import {
   DEVRY,
   DEVRY_DELIVERY,
@@ -243,5 +243,108 @@ describe("generateEngagement", () => {
     expect(() => generateEngagement(BAD, bad as typeof LEDGEBROOK, LEDGEBROOK_DELIVERY)).toThrow(
       /missing required parameter "beneficiaries"/,
     );
+  });
+});
+
+describe("session length", () => {
+  const scheduled = (ros: ReturnType<typeof computeRunOfShow>) =>
+    ros.main.filter((s) => !s.before_start && !s.after_close);
+
+  it("leaves the schedule alone when no length is asked for", () => {
+    // The guarantee that makes this feature safe to add: Ledgebrook's real
+    // clock times cannot move because an unset length runs no arithmetic.
+    const ros = computeRunOfShow(BAD, LEDGEBROOK);
+    expect(ros.close - ros.start).toBe(135);
+    expect(formatTime(ros.reveal)).toBe("4:30 PM");
+  });
+
+  it.each([90, 105, 120, 150, 180])("lands exactly on %i minutes", (minutes) => {
+    const ros = computeRunOfShow(BAD, { ...LEDGEBROOK, session_minutes: minutes });
+    expect(scheduled(ros).reduce((n, s) => n + s.duration, 0)).toBe(minutes);
+    expect(ros.close - ros.start).toBe(minutes);
+  });
+
+  it("keeps fixed steps at their template length at any duration", () => {
+    for (const minutes of [90, 120, 180]) {
+      const ros = computeRunOfShow(BAD, { ...LEDGEBROOK, session_minutes: minutes });
+      for (const s of scheduled(ros)) {
+        if (!s.fixed) continue;
+        const declared = BAD.run_of_show.main_track.find((t) => t.id === s.id)!.duration;
+        expect(s.duration, `${s.id} at ${minutes} minutes`).toBe(declared);
+      }
+    }
+  });
+
+  it("spends a longer session on the content block, the build and the debrief", () => {
+    const natural = computeRunOfShow(BAD, LEDGEBROOK);
+    const long = computeRunOfShow(BAD, { ...LEDGEBROOK, session_minutes: 180 });
+    const by = (ros: RunOfShow, id: string) => ros.main.find((s) => s.id === id)!.duration;
+    for (const id of ["content", "build", "debrief"]) {
+      expect(by(long, id), id).toBeGreaterThan(by(natural, id));
+    }
+  });
+
+  it("still pins the reveal to the departure deadline", () => {
+    // Shortening the session moves the start, never the reveal: the children
+    // leaving at 5:00 is the fact everything else is computed from.
+    const ros = computeRunOfShow(BAD, { ...LEDGEBROOK, session_minutes: 90 });
+    expect(formatTime(ros.reveal)).toBe("4:30 PM");
+    expect(formatTime(ros.start)).toBe("3:40 PM");
+  });
+
+  it("holds every elastic step at or above its declared minimum", () => {
+    const ros = computeRunOfShow(BAD, { ...LEDGEBROOK, session_minutes: 90 });
+    for (const s of scheduled(ros)) {
+      if (s.fixed) continue;
+      const declared = BAD.run_of_show.main_track.find((t) => t.id === s.id)!;
+      expect(s.duration, `${s.id}`).toBeGreaterThanOrEqual(declared.min ?? 1);
+    }
+  });
+
+  it("cascades the minimums rather than overshooting the target", () => {
+    // The naive single pass gets this wrong. At 90 minutes the build's
+    // proportional share is 15 but its minimum is 18, and pinning it there
+    // spends slack the other steps were counting on. Handled in one pass the
+    // total comes out at 93; the water-filling loop lands it on 90.
+    const ros = computeRunOfShow(BAD, { ...LEDGEBROOK, session_minutes: 90 });
+    const by = (id: string) => ros.main.find((s) => s.id === id)!.duration;
+    expect(by("build")).toBe(18);
+    expect(by("present")).toBe(8);
+    expect(by("content")).toBe(12);
+    expect(by("debrief")).toBe(7);
+  });
+
+  it("refuses a length below the floor and names it", () => {
+    expect(() => computeRunOfShow(BAD, { ...LEDGEBROOK, session_minutes: 60 })).toThrow(
+      /60 minutes is below this program's floor of 88/,
+    );
+  });
+
+  it("refuses a program with nothing elastic to give", () => {
+    const rigid: Program = {
+      ...BAD,
+      run_of_show: {
+        ...BAD.run_of_show,
+        main_track: BAD.run_of_show.main_track.map((s) =>
+          s.before_start || s.after_close ? s : { ...s, fixed: true },
+        ),
+      },
+    };
+    expect(() => computeRunOfShow(rigid, { ...LEDGEBROOK, session_minutes: 120 })).toThrow(
+      /no elastic steps.*fixed at 135/s,
+    );
+  });
+
+  it("treats an explicit duration override as the starting point for the fit", () => {
+    // Override then fit, not fit then override: a coordinator who lengthens the
+    // build by hand has changed the proportions the fit works from.
+    const ros = computeRunOfShow(
+      BAD,
+      { ...LEDGEBROOK, session_minutes: 150 },
+      { durations: { build: 60 } },
+    );
+    const by = (id: string) => ros.main.find((s) => s.id === id)!.duration;
+    expect(ros.close - ros.start).toBe(150);
+    expect(by("build")).toBeGreaterThan(by("content"));
   });
 });

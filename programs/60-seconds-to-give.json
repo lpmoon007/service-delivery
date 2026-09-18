@@ -64,6 +64,12 @@
       "required": true
     },
     {
+      "key": "session_minutes",
+      "label": "Session length (minutes)",
+      "type": "int",
+      "help": "Typically 90 to 180 minutes; 120 is very typical. Leave blank to run at the program's natural length of 105 minutes. Fixed steps such as the reveal keep their length; the content block, the build and the debrief absorb the difference."
+    },
+    {
       "key": "client_descriptor",
       "label": "How to describe the client",
       "type": "text",
@@ -220,6 +226,7 @@
         "id": "arrival",
         "label": "Participants arrive and are seated",
         "duration": 15,
+        "fixed": true,
         "details": [
           "Teams pre-assigned"
         ]
@@ -227,12 +234,14 @@
       {
         "id": "opening",
         "label": "Opening remarks: client executive",
-        "duration": 5
+        "duration": 5,
+        "fixed": true
       },
       {
         "id": "brief",
         "label": "Host sets the format and the stakes",
         "duration": 10,
+        "fixed": true,
         "details": [
           "Every win triggers a real donation",
           "The causes are named up front"
@@ -242,6 +251,7 @@
         "id": "rounds",
         "label": "Sixty-second challenge rounds",
         "duration": 55,
+        "min": 20,
         "details": [
           "Teams race the clock",
           "Running donation total on the scoreboard"
@@ -251,6 +261,7 @@
         "id": "totals",
         "label": "The totals are read out",
         "duration": 10,
+        "fixed": true,
         "is_anchor": true,
         "details": [
           "What the room raised, by cause"
@@ -259,7 +270,8 @@
       {
         "id": "debrief",
         "label": "Debrief and close: client executive",
-        "duration": 10
+        "duration": 10,
+        "min": 5
       },
       {
         "id": "loadout",

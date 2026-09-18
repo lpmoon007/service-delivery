@@ -48,7 +48,17 @@ export interface ResourceRule {
 export interface RunOfShowStep {
   id: string;
   label: string;
+  /** Minutes at the program's natural length. */
   duration: number;
+  /**
+   * This step is the same length at any session length. The reveal is five
+   * minutes whether the event runs 90 minutes or 180; the content block and the
+   * build are where time actually goes. Only elastic steps absorb a change in
+   * session length.
+   */
+  fixed?: boolean;
+  /** Floor for an elastic step, in minutes. Defaults to 1. */
+  min?: number;
   details?: string[];
   /** Runs before participant arrival, ending when the event starts. */
   before_start?: boolean;
@@ -168,6 +178,11 @@ export interface EngagementParams {
   event_start: string;
   /** "HH:MM", 24-hour. When beneficiaries must be gone. Anchors the schedule. */
   beneficiary_depart_by?: string | null;
+  /**
+   * Requested session length in minutes, excluding setup and load-out. Unset
+   * means the program's natural length. Events run 90 to 180; 120 is typical.
+   */
+  session_minutes?: number;
   [key: string]: unknown;
 }
 

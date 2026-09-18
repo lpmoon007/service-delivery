@@ -78,6 +78,12 @@
       "required": true
     },
     {
+      "key": "session_minutes",
+      "label": "Session length (minutes)",
+      "type": "int",
+      "help": "Typically 90 to 180 minutes; 120 is very typical. Leave blank to run at the program's natural length of 125 minutes. Fixed steps such as the reveal keep their length; the content block, the build and the debrief absorb the difference."
+    },
+    {
       "key": "beneficiary_depart_by",
       "label": "Hard deadline: children must depart by",
       "type": "time"
@@ -300,17 +306,20 @@
       {
         "id": "arrival",
         "label": "Participants arrive and are seated",
-        "duration": 15
+        "duration": 15,
+        "fixed": true
       },
       {
         "id": "opening",
         "label": "Opening remarks: client executive",
-        "duration": 5
+        "duration": 5,
+        "fixed": true
       },
       {
         "id": "content",
         "label": "Be Legendary content block: change",
         "duration": 25,
+        "min": 12,
         "details": [
           "The parts bag arrives with no instructions on purpose",
           "Connection Points woven in per the sponsor's objectives"
@@ -320,6 +329,7 @@
         "id": "build",
         "label": "Assemble the skateboards",
         "duration": 30,
+        "min": 18,
         "details": [
           "A bag of parts, no instructions",
           "Teams work out the sequence themselves",
@@ -330,12 +340,14 @@
         "id": "reveal",
         "label": "The Reveal: the children enter",
         "duration": 5,
+        "fixed": true,
         "is_anchor": true
       },
       {
         "id": "present",
         "label": "Teams present the boards, fit helmets, ride with the children",
         "duration": 20,
+        "min": 10,
         "details": [
           "Roaming photography throughout"
         ]
@@ -343,27 +355,32 @@
       {
         "id": "photo",
         "label": "Group photograph",
-        "duration": 5
+        "duration": 5,
+        "fixed": true
       },
       {
         "id": "tunnel",
         "label": "Human tunnel",
-        "duration": 3
+        "duration": 3,
+        "fixed": true
       },
       {
         "id": "reset",
         "label": "Room reset for the debrief",
-        "duration": 3
+        "duration": 3,
+        "fixed": true
       },
       {
         "id": "debrief",
         "label": "Debrief: what changed and when you noticed",
-        "duration": 10
+        "duration": 10,
+        "min": 5
       },
       {
         "id": "close",
         "label": "Close: client executive",
-        "duration": 4
+        "duration": 4,
+        "fixed": true
       },
       {
         "id": "inspection",

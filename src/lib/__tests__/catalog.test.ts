@@ -118,6 +118,42 @@ describe.each(PROGRAMS.map((p) => [p.code, p] as const))("%s", (code, program) =
   it("closes the loop: a final payment task exists", () => {
     expect(g().tasks.map((t) => t.title)).toContain("Final payment received");
   });
+
+  it("offers a session length and says what the natural one is", () => {
+    const p = program.parameters.find((q) => q.key === "session_minutes");
+    expect(p, `${code} has no session_minutes parameter`).toBeDefined();
+    expect(p!.required, "a blank length must mean the natural length").toBeFalsy();
+    const scheduled = program.run_of_show.main_track.filter(
+      (s) => !s.before_start && !s.after_close,
+    );
+    const natural = scheduled.reduce((n, s) => n + s.duration, 0);
+    expect(p!.help, `${code} help must state its natural length`).toContain(`${natural} minutes`);
+  });
+
+  it("classifies every scheduled step as fixed or gives it a minimum", () => {
+    // An unclassified step is silently elastic with a one-minute floor, which
+    // is how a five-minute reveal ends up scaled to fourteen.
+    for (const s of program.run_of_show.main_track) {
+      if (s.before_start || s.after_close) continue;
+      const classified = s.fixed === true || typeof s.min === "number";
+      expect(classified, `${code}: step "${s.id}" is neither fixed nor has a min`).toBe(true);
+      if (typeof s.min === "number") {
+        expect(s.min, `${code}: ${s.id} min exceeds its natural length`).toBeLessThanOrEqual(
+          s.duration,
+        );
+      }
+    }
+  });
+
+  it.each([90, 120, 180])("fits a %i-minute session exactly", (minutes) => {
+    const ros = generateEngagement(program, { ...params, session_minutes: minutes }, "2026-11-10")
+      .runOfShow;
+    const scheduled = ros.main.filter((s) => !s.before_start && !s.after_close);
+    expect(scheduled.reduce((n, s) => n + s.duration, 0)).toBe(minutes);
+    for (const s of scheduled) {
+      expect(s.duration, `${code}: ${s.id} at ${minutes} minutes`).toBeGreaterThanOrEqual(1);
+    }
+  });
 });
 
 describe("derived values fail loudly", () => {

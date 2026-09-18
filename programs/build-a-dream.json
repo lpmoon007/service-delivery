@@ -60,6 +60,12 @@
       "required": true
     },
     {
+      "key": "session_minutes",
+      "label": "Session length (minutes)",
+      "type": "int",
+      "help": "Typically 90 to 180 minutes; 120 is very typical. Leave blank to run at the program's natural length of 135 minutes. Fixed steps such as the reveal keep their length; the content block, the build and the debrief absorb the difference."
+    },
+    {
       "key": "beneficiary_depart_by",
       "label": "Hard deadline: children must depart by",
       "type": "time",
@@ -376,6 +382,7 @@
         "id": "arrival",
         "label": "Participants arrive and are seated",
         "duration": 15,
+        "fixed": true,
         "details": [
           "Teams pre-assigned and mixed across departments, not self-selected"
         ]
@@ -384,6 +391,7 @@
         "id": "opening",
         "label": "Opening remarks: client executive",
         "duration": 5,
+        "fixed": true,
         "details": [
           "Why the build closes the event",
           "Hands off to James Carter"
@@ -393,6 +401,7 @@
         "id": "content",
         "label": "Be Legendary content block",
         "duration": 25,
+        "min": 12,
         "details": [
           "Awareness: Moonwalking Bear",
           "Beliefs: Shreddies",
@@ -403,6 +412,7 @@
         "id": "build",
         "label": "Build the bicycles",
         "duration": 30,
+        "min": 18,
         "details": [
           "Build instructions and client brief sheet issued",
           "No mention of the children"
@@ -412,6 +422,7 @@
         "id": "reveal",
         "label": "The Reveal",
         "duration": 5,
+        "fixed": true,
         "is_anchor": true,
         "details": [
           "Quality inspection framing, then the children enter"
@@ -421,6 +432,7 @@
         "id": "present",
         "label": "Teams present the bikes, adjust fit, ride with the children",
         "duration": 15,
+        "min": 8,
         "details": [
           "Roaming photography throughout"
         ]
@@ -429,6 +441,7 @@
         "id": "photo",
         "label": "Group photograph",
         "duration": 5,
+        "fixed": true,
         "details": [
           "This is the photograph the event is remembered by"
         ]
@@ -437,6 +450,7 @@
         "id": "tunnel",
         "label": "Human tunnel",
         "duration": 3,
+        "fixed": true,
         "details": [
           "Participants form the tunnel, children run out through it"
         ]
@@ -445,6 +459,7 @@
         "id": "reset",
         "label": "Room reset for the debrief",
         "duration": 4,
+        "fixed": true,
         "details": [
           "Build tables cleared, seating pulled in"
         ]
@@ -453,6 +468,7 @@
         "id": "debrief",
         "label": "Debrief, facilitated by James Carter",
         "duration": 20,
+        "min": 5,
         "details": [
           "Open with: who has the first bike story?",
           "What happened, so what, now what"
@@ -462,6 +478,7 @@
         "id": "challenge",
         "label": "30-Day Challenge",
         "duration": 4,
+        "fixed": true,
         "details": [
           "Voluntary, SMS based, no app",
           "Custom client page and QR code on screen"
@@ -471,6 +488,7 @@
         "id": "close",
         "label": "Close: client executive",
         "duration": 4,
+        "fixed": true,
         "details": [
           "Connects the session to the client's definition of leadership"
         ]
