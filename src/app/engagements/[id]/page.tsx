@@ -56,6 +56,7 @@ export default async function EngagementPage({
         engagement={detail.generated}
         resourceValues={detail.resourceValues}
         costs={costs}
+        staff={detail.staff}
         audience={profile?.role === "owner" ? "owner" : "contractor"}
       />
     </>

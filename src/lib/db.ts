@@ -18,6 +18,7 @@ import type {
   EngagementCostRow,
   EngagementResourceRow,
   EngagementRow,
+  EngagementStaffRow,
   EngagementTaskRow,
   ProgramRow,
 } from "./db-types";
@@ -41,8 +42,38 @@ export interface EngagementDetail {
   tasks: EngagementTaskRow[];
   resources: EngagementResourceRow[];
   costs: EngagementCostRow[];
+  staff: EngagementStaffRow[];
   /** Values keyed "resourceKey.fieldName", flattened for the doc component. */
   resourceValues: Record<string, string>;
+}
+
+export interface ProgramChoice {
+  id: string;
+  code: string;
+  name: string;
+  summary: string | null;
+  /** Declared parameters, so the new-engagement form builds itself. */
+  parameters: Program["parameters"];
+}
+
+/** The program catalog, for the service picker. */
+export async function listPrograms(): Promise<ProgramChoice[]> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("programs")
+    .select("id, code, name, summary, definition")
+    .eq("active", true)
+    .order("name", { ascending: true });
+  if (error) throw new Error(`listPrograms: ${error.message}`);
+
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    code: r.code,
+    name: r.name,
+    summary: r.summary,
+    parameters: (r.definition as unknown as Program).parameters ?? [],
+  }));
 }
 
 function asProgram(row: ProgramRow): Program {
@@ -145,7 +176,7 @@ export async function getEngagement(id: string): Promise<EngagementDetail | null
   const params = toParams(row, program);
   const generated = generateEngagement(program, params, row.delivery_date, row.ros_overrides);
 
-  const [tasks, resources, costs] = await Promise.all([
+  const [tasks, resources, costs, staff] = await Promise.all([
     supabase
       .from("engagement_tasks")
       .select("*")
@@ -154,12 +185,19 @@ export async function getEngagement(id: string): Promise<EngagementDetail | null
     supabase.from("engagement_resources").select("*").eq("engagement_id", id),
     // RLS filters owner-only lines out of a contractor's result set.
     supabase.from("engagement_costs").select("*").eq("engagement_id", id),
+    supabase
+      .from("engagement_staff")
+      .select("*")
+      .eq("engagement_id", id)
+      .order("is_lead", { ascending: false })
+      .order("sort_order", { ascending: true }),
   ]);
 
   for (const [what, res] of [
     ["tasks", tasks],
     ["resources", resources],
     ["costs", costs],
+    ["staff", staff],
   ] as const) {
     if (res.error) throw new Error(`getEngagement ${what}: ${res.error.message}`);
   }
@@ -178,6 +216,7 @@ export async function getEngagement(id: string): Promise<EngagementDetail | null
     tasks: tasks.data ?? [],
     resources: resources.data ?? [],
     costs: costs.data ?? [],
+    staff: staff.data ?? [],
     resourceValues,
   };
 }

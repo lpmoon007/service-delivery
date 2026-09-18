@@ -14,10 +14,11 @@
 import { revalidatePath } from "next/cache";
 
 import { getEngagement, materializeEngagement } from "./db";
+import { redirect } from "next/navigation";
 import { createClient } from "./supabase/server";
-import { parseTime } from "./generate";
+import { generateEngagement, parseTime } from "./generate";
 import type { EngagementStatus, TaskStatus } from "./db-types";
-import type { EngagementParams } from "./types";
+import type { EngagementParams, Program } from "./types";
 
 const TASK_STATUSES: TaskStatus[] = ["not_started", "in_progress", "done", "na"];
 const ENGAGEMENT_STATUSES: EngagementStatus[] = [
@@ -27,6 +28,63 @@ const ENGAGEMENT_STATUSES: EngagementStatus[] = [
   "closed",
   "cancelled",
 ];
+
+
+/**
+ * Read a program's declared parameters out of a form.
+ *
+ * Shared by create and save so the two cannot drift: a parameter added to a
+ * program template is immediately accepted by both, with no code change.
+ */
+function readParams(
+  program: Program,
+  formData: FormData,
+  clientName: string,
+  base: Record<string, unknown> = {},
+): { value: Record<string, unknown> } | { error: string } {
+  const params: Record<string, unknown> = { ...base, client: clientName, program: program.code };
+
+  for (const p of program.parameters) {
+    const raw = formData.get(`param.${p.key}`);
+
+    if (p.type === "bool") {
+      params[p.key] = raw === "on" || raw === "true";
+      continue;
+    }
+
+    const value = typeof raw === "string" ? raw.trim() : "";
+
+    if (value === "") {
+      if (p.required) return { error: `${p.label} is required.` };
+      params[p.key] = p.type === "time" ? null : undefined;
+      continue;
+    }
+
+    if (p.type === "int" || p.type === "number") {
+      const n = Number(value);
+      if (!Number.isFinite(n) || n < 0) return { error: `${p.label} must be a positive number.` };
+      if (p.type === "int" && !Number.isInteger(n)) {
+        return { error: `${p.label} must be a whole number.` };
+      }
+      params[p.key] = n;
+      continue;
+    }
+
+    if (p.type === "time") {
+      try {
+        parseTime(value);
+      } catch {
+        return { error: `${p.label} must be a time like 15:15.` };
+      }
+      params[p.key] = value;
+      continue;
+    }
+
+    params[p.key] = value;
+  }
+
+  return { value: params };
+}
 
 export interface ActionResult {
   ok: boolean;
@@ -187,55 +245,16 @@ export async function saveEngagement(
     return fail(`unknown status "${status}"`);
   }
 
-  // Build params from the program's own declared parameters, so a new program
-  // gets an edit form without any code change here.
-  const params: Record<string, unknown> = { ...(detail.row.params as object) };
-  for (const p of detail.program.parameters) {
-    const raw = formData.get(`param.${p.key}`);
-
-    if (p.type === "bool") {
-      params[p.key] = raw === "on" || raw === "true";
-      continue;
-    }
-
-    const value = typeof raw === "string" ? raw.trim() : "";
-
-    if (value === "") {
-      if (p.required) return fail(`${p.label} is required.`);
-      params[p.key] = p.type === "time" ? null : undefined;
-      continue;
-    }
-
-    if (p.type === "int" || p.type === "number") {
-      const n = Number(value);
-      if (!Number.isFinite(n) || n < 0) return fail(`${p.label} must be a positive number.`);
-      if (p.type === "int" && !Number.isInteger(n)) {
-        return fail(`${p.label} must be a whole number.`);
-      }
-      params[p.key] = n;
-      continue;
-    }
-
-    if (p.type === "time") {
-      try {
-        parseTime(value);
-      } catch {
-        return fail(`${p.label} must be a time like 15:15.`);
-      }
-      params[p.key] = value;
-      continue;
-    }
-
-    params[p.key] = value;
-  }
+  const read = readParams(detail.program, formData, clientName, detail.row.params as Record<string, unknown>);
+  if ("error" in read) return fail(read.error);
+  const params = read.value;
 
   // Prove the new parameters actually generate before writing them, so a bad
   // combination is rejected here rather than breaking every page that reads it.
-  const { generateEngagement } = await import("./generate");
   try {
     generateEngagement(
       detail.program,
-      { ...(params as EngagementParams), client: clientName },
+      params as EngagementParams,
       deliveryDate,
       detail.row.ros_overrides,
     );
@@ -302,4 +321,176 @@ export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath("/");
+}
+
+
+/**
+ * Create an engagement from a program and a set of parameters.
+ *
+ * This is the front door: pick a client, pick a service, give it a date, fill
+ * in the counts the program asks for. Everything downstream, the whole task
+ * timeline, the material quantities, the resource requirements, is derived from
+ * what this writes.
+ */
+export async function createEngagement(formData: FormData): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const clientName = String(formData.get("client_name") ?? "").trim();
+  if (!clientName) return fail("Client name is required.");
+
+  const programId = String(formData.get("program_id") ?? "").trim();
+  if (!programId) return fail("Pick a service.");
+
+  const deliveryDate = String(formData.get("delivery_date") ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate)) {
+    return fail("Delivery date must be a real date.");
+  }
+
+  const { data: programRow, error: pErr } = await supabase
+    .from("programs")
+    .select("*")
+    .eq("id", programId)
+    .maybeSingle();
+  if (pErr) return fail(pErr.message);
+  if (!programRow) return fail("That service no longer exists.");
+
+  const program = programRow.definition as unknown as Program;
+  const params = readParams(program, formData, clientName);
+  if ("error" in params) return fail(params.error);
+
+  // Prove it generates before writing anything, so a bad combination fails at
+  // the form rather than leaving a broken engagement behind.
+  try {
+    generateEngagement(program, params.value as EngagementParams, deliveryDate, {});
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Those details do not generate a timeline.");
+  }
+
+  const { data, error } = await supabase
+    .from("engagements")
+    .insert({
+      client_name: clientName,
+      program_id: programId,
+      delivery_date: deliveryDate,
+      status: "planning",
+      params: params.value,
+      ros_overrides: {},
+      venue_name: String(formData.get("venue_name") ?? "").trim() || null,
+      venue_address: String(formData.get("venue_address") ?? "").trim() || null,
+      notes: String(formData.get("notes") ?? "").trim() || null,
+      hubspot_deal_id: String(formData.get("hubspot_deal_id") ?? "").trim() || null,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      return fail("An engagement already exists for that HubSpot deal id.");
+    }
+    return fail(error.message);
+  }
+  if (!data) return fail("Not created: only the owner can add an engagement.");
+
+  try {
+    await materializeEngagement(data.id);
+  } catch (e) {
+    return fail(
+      `Created, but generating the timeline failed: ${
+        e instanceof Error ? e.message : "unknown error"
+      }`,
+    );
+  }
+
+  revalidatePath("/");
+  redirect(`/engagements/${data.id}/work`);
+}
+
+/** Change which service an engagement runs, then rebuild from the new template. */
+export async function setProgram(
+  engagementId: string,
+  programId: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("engagements")
+    .update({ program_id: programId, updated_at: new Date().toISOString() })
+    .eq("id", engagementId)
+    .select("id");
+
+  if (error) return fail(error.message);
+  if (!data || data.length === 0) {
+    return fail("Not changed: only the owner can change the service.");
+  }
+
+  // The old program's tasks do not belong to the new one. Their source keys are
+  // prefixed with the program code, so they would otherwise linger forever.
+  const { error: delErr } = await supabase
+    .from("engagement_tasks")
+    .delete()
+    .eq("engagement_id", engagementId);
+  if (delErr) return fail(`Service changed, but clearing old tasks failed: ${delErr.message}`);
+
+  try {
+    await materializeEngagement(engagementId);
+  } catch (e) {
+    return fail(
+      `Service changed, but generating the new timeline failed: ${
+        e instanceof Error ? e.message : "unknown error"
+      }. The parameters the new service needs are probably missing; fill them in and save.`,
+    );
+  }
+
+  revalidatePath(`/engagements/${engagementId}`);
+  revalidatePath(`/engagements/${engagementId}/work`);
+  revalidatePath(`/engagements/${engagementId}/edit`);
+  return { ok: true, message: "Service changed and timeline rebuilt." };
+}
+
+/** Add someone to the delivery crew. */
+export async function addStaff(
+  engagementId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return fail("A name is required.");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("engagement_staff")
+    .insert({
+      engagement_id: engagementId,
+      name,
+      role: String(formData.get("role") ?? "").trim() || null,
+      email: String(formData.get("email") ?? "").trim() || null,
+      phone: String(formData.get("phone") ?? "").trim() || null,
+      is_lead: formData.get("is_lead") === "on",
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    })
+    .select("id");
+
+  if (error) return fail(error.message);
+  if (!data || data.length === 0) {
+    return fail("Not added: you do not have permission to staff this engagement.");
+  }
+
+  revalidatePath(`/engagements/${engagementId}/work`);
+  revalidatePath(`/engagements/${engagementId}`);
+  return { ok: true, message: `${name} added.` };
+}
+
+export async function removeStaff(
+  engagementId: string,
+  staffId: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("engagement_staff")
+    .delete()
+    .eq("id", staffId)
+    .eq("engagement_id", engagementId);
+
+  if (error) return fail(error.message);
+  revalidatePath(`/engagements/${engagementId}/work`);
+  revalidatePath(`/engagements/${engagementId}`);
+  return { ok: true };
 }

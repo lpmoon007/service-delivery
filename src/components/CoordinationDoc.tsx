@@ -9,6 +9,7 @@
  */
 
 import { formatTime } from "@/lib/generate";
+import type { EngagementStaffRow } from "@/lib/db-types";
 import type { CostLine, GeneratedResource, Visibility } from "@/lib/types";
 import type { GeneratedEngagement } from "@/lib/generate";
 
@@ -80,6 +81,8 @@ export interface CoordinationDocProps {
   /** Free-text values keyed "resourceKey.fieldName". */
   resourceValues?: Record<string, string | undefined>;
   costs?: Record<string, { amount?: number; note?: string }>;
+  /** Who is working the day. Empty renders nothing rather than an empty table. */
+  staff?: EngagementStaffRow[];
   /** 'contractor' hides owner-only cost lines. This is a presentation guard;
    *  the database enforces the same rule with row-level security. */
   audience?: Visibility;
@@ -89,6 +92,7 @@ export function CoordinationDoc({
   engagement,
   resourceValues = {},
   costs = {},
+  staff = [],
   audience = "contractor",
 }: CoordinationDocProps) {
   const { program, params, deliveryDate, runOfShow, tasks, quantities, resources } = engagement;
@@ -141,6 +145,36 @@ export function CoordinationDoc({
           </tbody>
         </table>
       </section>
+
+      {staff.length > 0 && (
+        <section>
+          <h2>Crew</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {staff.map((s) => (
+                <tr key={s.id}>
+                  <td>
+                    <strong>{s.name}</strong>
+                    {s.is_lead && <span className="tag">lead</span>}
+                  </td>
+                  <td>{s.role ?? ""}</td>
+                  <td>
+                    {[s.phone, s.email].filter(Boolean).join(" · ") || <ToFill />}
+                    {s.notes && <p className="det">{s.notes}</p>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       {resources.map((r) => (
         <ResourceBlock

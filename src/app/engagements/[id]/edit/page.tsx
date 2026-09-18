@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EngagementForm } from "@/components/EngagementForm";
-import { currentProfile, getEngagement } from "@/lib/db";
+import { currentProfile, getEngagement, listPrograms } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,11 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   if (!isSupabaseConfigured) notFound();
 
-  const [detail, profile] = await Promise.all([getEngagement(id), currentProfile()]);
+  const [detail, profile, programs] = await Promise.all([
+    getEngagement(id),
+    currentProfile(),
+    listPrograms(),
+  ]);
   if (!detail) notFound();
 
   // The database refuses the write regardless, but showing a form that cannot
@@ -39,7 +43,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
       </nav>
       <h1>Edit {detail.row.client_name}</h1>
       <p className="sub">{detail.program.name}</p>
-      <EngagementForm row={detail.row} program={detail.program} />
+      <EngagementForm row={detail.row} program={detail.program} programs={programs} />
     </main>
   );
 }

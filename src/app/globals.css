@@ -110,3 +110,6 @@ p.warn{color:var(--warn)}
   :root:not([data-theme="light"]) p.ok{color:#6fce8b}
 }
 @media print{ .no-print,.topbar{display:none} }
+a.cta{display:inline-block;background:var(--navy);color:var(--paper);
+  padding:9px 14px;border-radius:5px;font-weight:bold;text-decoration:none}
+datalist{display:none}

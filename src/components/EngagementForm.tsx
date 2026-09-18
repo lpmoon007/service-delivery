@@ -1,9 +1,13 @@
 "use client";
 
-import { saveEngagement, regenerate } from "@/lib/actions";
+import { useState } from "react";
+
+import { saveEngagement, regenerate, setProgram } from "@/lib/actions";
+import type { ProgramChoice } from "@/lib/db";
 import type { EngagementRow, EngagementStatus } from "@/lib/db-types";
 import type { Program } from "@/lib/types";
 import { Feedback, useAction } from "./ActionFeedback";
+import { ProgramParamFields } from "./ProgramParamFields";
 
 const STATUSES: EngagementStatus[] = [
   "planning",
@@ -20,12 +24,16 @@ const STATUSES: EngagementStatus[] = [
 export function EngagementForm({
   row,
   program,
+  programs,
 }: {
   row: EngagementRow;
   program: Program;
+  programs: ProgramChoice[];
 }) {
   const save = useAction();
   const regen = useAction();
+  const swap = useAction();
+  const [pendingProgram, setPendingProgram] = useState(row.program_id);
   const params = (row.params ?? {}) as Record<string, unknown>;
 
   return (
@@ -72,37 +80,7 @@ export function EngagementForm({
           Changing a count or a date re-dates every task and recomputes every quantity. Saving
           regenerates the timeline automatically; task status is preserved.
         </p>
-        <div className="grid">
-          {program.parameters.map((p) => {
-            const v = params[p.key];
-            if (p.type === "bool") {
-              return (
-                <label key={p.key} className="check">
-                  <input
-                    type="checkbox"
-                    name={`param.${p.key}`}
-                    defaultChecked={v === true}
-                  />
-                  <span>{p.label}</span>
-                </label>
-              );
-            }
-            return (
-              <label key={p.key}>
-                <span>
-                  {p.label}
-                  {p.required && <span className="req"> required</span>}
-                </span>
-                <input
-                  name={`param.${p.key}`}
-                  inputMode={p.type === "int" || p.type === "number" ? "numeric" : undefined}
-                  placeholder={p.type === "time" ? "15:15" : undefined}
-                  defaultValue={v === null || v === undefined ? "" : String(v)}
-                />
-              </label>
-            );
-          })}
-        </div>
+        <ProgramParamFields parameters={program.parameters} values={params} />
 
         <label className="wide">
           <span>Notes</span>
@@ -114,6 +92,38 @@ export function EngagementForm({
         </button>
         <Feedback result={save.result} pending={save.pending} />
       </form>
+
+      <h2>Service</h2>
+      <p className="band">
+        Currently <strong>{program.name}</strong>. Changing it discards this engagement&rsquo;s
+        tasks and rebuilds them from the new template, because a task belongs to the service that
+        defined it. Any status you had set on those tasks is lost.
+      </p>
+      <div className="grid">
+        <label>
+          <span>Service</span>
+          <select
+            value={pendingProgram}
+            onChange={(e) => setPendingProgram(e.target.value)}
+            disabled={swap.pending}
+          >
+            {programs.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <button
+        type="button"
+        className="secondary"
+        disabled={swap.pending || pendingProgram === row.program_id}
+        onClick={() => swap.run(() => setProgram(row.id, pendingProgram))}
+      >
+        Change service and rebuild
+      </button>
+      <Feedback result={swap.result} pending={swap.pending} />
 
       <h2>Regenerate only</h2>
       <p className="band">

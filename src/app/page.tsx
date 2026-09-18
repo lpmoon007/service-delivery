@@ -24,6 +24,14 @@ export default async function Home() {
         </p>
       )}
 
+      {isSupabaseConfigured && (
+        <p>
+          <Link className="cta" href="/engagements/new">
+            Add a client
+          </Link>
+        </p>
+      )}
+
       <h2>Engagements</h2>
       {engagements.length === 0 ? (
         <p className="band">

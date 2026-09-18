@@ -102,6 +102,20 @@ export type EngagementCostRow = {
   updated_at: string;
 }
 
+export type EngagementStaffRow = {
+  id: string;
+  engagement_id: string;
+  name: string;
+  role: string | null;
+  email: string | null;
+  phone: string | null;
+  is_lead: boolean;
+  notes: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type EngagementAssignmentRow = {
   engagement_id: string;
   profile_id: string;
@@ -181,6 +195,7 @@ export interface Database {
       engagement_tasks: Table<EngagementTaskRow, EngagementChild>;
       engagement_resources: Table<EngagementResourceRow, EngagementChild>;
       engagement_costs: Table<EngagementCostRow, EngagementChild>;
+      engagement_staff: Table<EngagementStaffRow, EngagementChild>;
     };
     Views: {
       engagement_pnl: { Row: EngagementPnlRow; Relationships: [] };

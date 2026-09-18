@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { CostEditor } from "@/components/CostEditor";
 import { ResourceEditor } from "@/components/ResourceEditor";
+import { StaffEditor } from "@/components/StaffEditor";
 import { TaskTable } from "@/components/TaskTable";
 import { currentProfile, getEngagement } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -50,6 +51,13 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
 
       <h2>Tasks</h2>
       <TaskTable engagementId={id} tasks={detail.tasks} today={today} />
+
+      <h2>Crew</h2>
+      <p className="band">
+        Who is working the day. These people do not need accounts; this is the list that appears on
+        the coordination doc.
+      </p>
+      <StaffEditor engagementId={id} staff={detail.staff} />
 
       <h2>Resources</h2>
       <p className="band">
