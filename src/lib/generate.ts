@@ -346,14 +346,47 @@ export function resolveResources(program: Program, params: EngagementParams): Ge
         break;
       }
     }
+    const fieldDefaults: Record<string, string> = {};
+    for (const [field, formula] of Object.entries(rule.field_defaults ?? {})) {
+      try {
+        const v = evaluate(formula, ctx);
+        // Booleans are deliberately not stringified into a text field: "false"
+        // reads as an answer when the truth is that nobody has answered.
+        if (typeof v === "string" && v.trim()) fieldDefaults[field] = v.trim();
+        else if (typeof v === "number" && Number.isFinite(v)) fieldDefaults[field] = String(v);
+      } catch {
+        // The parameter behind this field is not filled in yet. Leaving the
+        // field blank is the honest outcome.
+      }
+    }
+
     out.push({
       key: rule.key,
       label: rule.label,
       count,
       vehicle,
       fields: rule.fields ?? [],
+      fieldDefaults,
       note: rule.note,
     });
+  }
+  return out;
+}
+
+/**
+ * The resource field values the engagement can answer by itself, keyed
+ * "resourceKey.fieldName" to match what a contractor's saved fields use.
+ *
+ * Merge order is the point: these go in first and a stored value overwrites
+ * them, so typing into a field always wins and clearing it falls back to what
+ * the engagement knows rather than to nothing.
+ */
+export function derivedResourceValues(resources: GeneratedResource[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const r of resources) {
+    for (const [field, value] of Object.entries(r.fieldDefaults)) {
+      out[`${r.key}.${field}`] = value;
+    }
   }
   return out;
 }

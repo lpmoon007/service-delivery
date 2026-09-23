@@ -206,6 +206,12 @@
         "floor_protection",
         "av_notes"
       ],
+      "field_defaults": {
+        "name": "venue_name",
+        "address": "venue_address",
+        "contact_phone": "venue_phone",
+        "room": "holding_room"
+      },
       "note": "Live animals indoors need written venue permission and floor protection. Confirm both before anything else is booked."
     },
     {
@@ -222,7 +228,12 @@
         "handler_count",
         "arrival_time",
         "welfare_limits"
-      ]
+      ],
+      "field_defaults": {
+        "org_name": "beneficiary_org",
+        "contact_name": "beneficiary_contact_name",
+        "animal_count": "beneficiaries"
+      }
     },
     {
       "key": "animal_transport",

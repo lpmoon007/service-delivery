@@ -178,9 +178,11 @@ const housewarming: Program = {
   resources: [
     { key: "venue", label: "Venue", always: true,
       fields: ["name", "address", "contact_name", "contact_phone", "room", "animal_policy", "floor_protection", "av_notes"],
+      field_defaults: { name: "venue_name", address: "venue_address", contact_phone: "venue_phone", room: "holding_room" },
       note: "Live animals indoors need written venue permission and floor protection. Confirm both before anything else is booked." },
     { key: "shelter_partner", label: "Shelter or rescue partner", always: true,
-      fields: ["org_name", "address", "contact_name", "contact_phone", "contact_email", "animal_count", "handler_count", "arrival_time", "welfare_limits"] },
+      fields: ["org_name", "address", "contact_name", "contact_phone", "contact_email", "animal_count", "handler_count", "arrival_time", "welfare_limits"],
+      field_defaults: { org_name: "beneficiary_org", contact_name: "beneficiary_contact_name", animal_count: "beneficiaries" } },
     { key: "animal_transport", label: "Animal transport", condition: "beneficiary_travels",
       vehicle_rule: [
         { when: "beneficiaries <= 6", vehicle: "Partner's own vehicle", count_formula: "1" },
@@ -307,9 +309,11 @@ const getOnBoard: Program = {
   resources: [
     { key: "venue", label: "Venue", always: true,
       fields: ["name", "address", "contact_name", "contact_phone", "room", "floor_notes", "av_notes"],
+      field_defaults: { name: "venue_name", address: "venue_address", contact_phone: "venue_phone", room: "holding_room" },
       note: "Children may want to try the boards. Confirm whether riding indoors is permitted and where." },
     { key: "youth_partner", label: "Youth organization partner", always: true,
-      fields: ["org_name", "address", "contact_name", "contact_phone", "contact_email", "child_count", "chaperone_count", "consent_status", "arrival_time"] },
+      fields: ["org_name", "address", "contact_name", "contact_phone", "contact_email", "child_count", "chaperone_count", "consent_status", "arrival_time"],
+      field_defaults: { org_name: "beneficiary_org", contact_name: "beneficiary_contact_name", child_count: "beneficiaries" } },
     { key: "child_transport", label: "Child transport", condition: "beneficiary_travels",
       vehicle_rule: [
         { when: "beneficiaries <= 8", vehicle: "Van or car pool", count_formula: "1" },
@@ -431,7 +435,8 @@ const sixtySeconds: Program = {
   ],
   resources: [
     { key: "venue", label: "Venue", always: true,
-      fields: ["name", "address", "contact_name", "contact_phone", "room", "stage_notes", "av_notes"] },
+      fields: ["name", "address", "contact_name", "contact_phone", "room", "stage_notes", "av_notes"],
+      field_defaults: { name: "venue_name", address: "venue_address", contact_phone: "venue_phone" } },
     { key: "av_and_staging", label: "AV and staging", always: true,
       fields: ["vendor", "contact", "mic_type", "countdown_clock", "scoreboard", "stage_notes", "cost"],
       note: "A sixty-second format lives or dies on a visible clock and audible cues." },

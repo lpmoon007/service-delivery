@@ -4,6 +4,7 @@ import program from "../../../programs/build-a-dream.json";
 import {
   computeQuantities,
   computeRunOfShow,
+  derivedResourceValues,
   formatTime,
   generateEngagement,
   generateTasks,
@@ -346,5 +347,72 @@ describe("session length", () => {
     const by = (id: string) => ros.main.find((s) => s.id === id)!.duration;
     expect(ros.close - ros.start).toBe(150);
     expect(by("build")).toBeGreaterThan(by("content"));
+  });
+});
+
+describe("resource fields the engagement already knows", () => {
+  // McKesson, as JC filled it in: venue and beneficiary organization set on the
+  // engagement, and the coordination doc's venue block still read "to be
+  // filled" because that block reads a different store.
+  const MCKESSON = {
+    ...LEDGEBROOK,
+    client: "McKesson",
+    participants: 26,
+    teams: 5,
+    beneficiaries: 5,
+    beneficiary_org: "Boys and Girls Club",
+    venue_name: "Vinoy Resort",
+    venue_address: "501 5th Ave NE, St. Petersburg, FL 33701",
+    venue_phone: "727-894-1000",
+    travel_distance_mi: 12,
+  } as unknown as typeof LEDGEBROOK;
+
+  it("fills the venue block from the engagement", () => {
+    const values = derivedResourceValues(resolveResources(BAD, MCKESSON));
+    expect(values["venue.name"]).toBe("Vinoy Resort");
+    expect(values["venue.address"]).toBe("501 5th Ave NE, St. Petersburg, FL 33701");
+    expect(values["venue.contact_phone"]).toBe("727-894-1000");
+  });
+
+  it("fills the beneficiary organization block from the engagement", () => {
+    const values = derivedResourceValues(resolveResources(BAD, MCKESSON));
+    expect(values["beneficiary_site.org_name"]).toBe("Boys and Girls Club");
+  });
+
+  it("stringifies a numeric default", () => {
+    const values = derivedResourceValues(resolveResources(BAD, MCKESSON));
+    expect(values["transportation.distance_mi"]).toBe("12");
+  });
+
+  it("leaves a field blank when the engagement has not answered it", () => {
+    // Nobody has named the venue's contact, so the block must not claim one.
+    const values = derivedResourceValues(resolveResources(BAD, MCKESSON));
+    expect(values["venue.contact_name"]).toBeUndefined();
+    expect(values["beneficiary_site.contact_name"]).toBeUndefined();
+  });
+
+  it("does not invent a value for an engagement with nothing filled in", () => {
+    const values = derivedResourceValues(resolveResources(BAD, LEDGEBROOK));
+    expect(values["venue.address"]).toBeUndefined();
+    expect(values["venue.contact_phone"]).toBeUndefined();
+  });
+
+  it("never writes a boolean into a text field", () => {
+    const rigged: Program = {
+      ...BAD,
+      resources: BAD.resources.map((r) =>
+        r.key === "venue" ? { ...r, field_defaults: { av_notes: "beneficiary_travels" } } : r,
+      ),
+    };
+    const values = derivedResourceValues(resolveResources(rigged, MCKESSON));
+    expect(values["venue.av_notes"]).toBeUndefined();
+  });
+
+  it("only ever supplies a field the resource declares", () => {
+    for (const r of resolveResources(BAD, MCKESSON)) {
+      for (const field of Object.keys(r.fieldDefaults)) {
+        expect(r.fields, `${r.key}.${field}`).toContain(field);
+      }
+    }
   });
 });

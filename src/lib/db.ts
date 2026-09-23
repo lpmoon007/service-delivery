@@ -11,7 +11,11 @@
  * app is runnable without a database.
  */
 
-import { generateEngagement, type GeneratedEngagement } from "./generate";
+import {
+  derivedResourceValues,
+  generateEngagement,
+  type GeneratedEngagement,
+} from "./generate";
 import { isSupabaseConfigured } from "./env";
 import { createClient } from "./supabase/server";
 import type {
@@ -202,10 +206,14 @@ export async function getEngagement(id: string): Promise<EngagementDetail | null
     if (res.error) throw new Error(`getEngagement ${what}: ${res.error.message}`);
   }
 
-  const resourceValues: Record<string, string> = {};
+  // What the engagement already knows goes in first; what a contractor typed
+  // overwrites it. Without this the venue block reads "to be filled" next to a
+  // booked venue, because the venue name lives on the engagement and the block
+  // reads a different store.
+  const resourceValues: Record<string, string> = derivedResourceValues(generated.resources);
   for (const r of resources.data ?? []) {
     for (const [k, v] of Object.entries(r.fields ?? {})) {
-      if (typeof v === "string" && v) resourceValues[`${r.resource_key}.${k}`] = v;
+      if (typeof v === "string" && v.trim()) resourceValues[`${r.resource_key}.${k}`] = v;
     }
   }
 

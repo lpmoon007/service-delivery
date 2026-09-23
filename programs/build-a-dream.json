@@ -262,7 +262,13 @@
         "contact_phone",
         "room",
         "av_notes"
-      ]
+      ],
+      "field_defaults": {
+        "name": "venue_name",
+        "address": "venue_address",
+        "contact_phone": "venue_phone",
+        "room": "holding_room"
+      }
     },
     {
       "key": "beneficiary_site",
@@ -276,7 +282,11 @@
         "contact_email",
         "chaperone_count",
         "consent_status"
-      ]
+      ],
+      "field_defaults": {
+        "org_name": "beneficiary_org",
+        "contact_name": "beneficiary_contact_name"
+      }
     },
     {
       "key": "transportation",
@@ -309,6 +319,9 @@
         "distance_mi",
         "cost"
       ],
+      "field_defaults": {
+        "distance_mi": "travel_distance_mi"
+      },
       "note": "Ledgebrook used a limousine for 13 children and it was left off the run of show entirely. DeVry used 3 buses plus a U-Haul van for materials."
     },
     {

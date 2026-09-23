@@ -26,6 +26,13 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
   // than whatever happened to be stored.
   const fieldsByKey = new Map(detail.program.resources.map((r) => [r.key, r.fields ?? []]));
 
+  // Shown as placeholders, not prefilled values: the engagement already knows
+  // these, so writing them into the resource row again would create a second
+  // copy that can then disagree with the first.
+  const derivedByKey = new Map(
+    detail.generated.resources.map((r) => [r.key, r.fieldDefaults]),
+  );
+
   return (
     <main>
       <nav className="crumbs">
@@ -94,6 +101,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
             engagementId={id}
             resource={r}
             fieldNames={fieldsByKey.get(r.resource_key) ?? Object.keys(r.fields ?? {})}
+            derived={derivedByKey.get(r.resource_key) ?? {}}
           />
         ))
       )}

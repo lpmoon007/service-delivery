@@ -42,6 +42,17 @@ export interface ResourceRule {
   count_formula?: string;
   vehicle_rule?: VehicleRule[];
   fields?: string[];
+  /**
+   * Expressions filling a field from what the engagement already knows, keyed
+   * by field name. The venue's name is typed once on the engagement, so asking
+   * for it again in the venue block is how a coordination doc ends up reading
+   * "to be filled" next to a booked venue. A field a contractor has typed
+   * always wins; these only supply the ones nobody has.
+   *
+   * An expression naming a parameter this engagement never filled is left
+   * blank rather than failing: the field is simply still unknown.
+   */
+  field_defaults?: Record<string, string>;
   note?: string;
 }
 
@@ -235,5 +246,7 @@ export interface GeneratedResource {
   count: number | null;
   vehicle: string | null;
   fields: string[];
+  /** Resolved `field_defaults`, by field name. Only the ones that evaluated. */
+  fieldDefaults: Record<string, string>;
   note?: string;
 }

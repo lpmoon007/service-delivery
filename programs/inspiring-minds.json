@@ -278,6 +278,12 @@
         "power_notes",
         "lighting_notes"
       ],
+      "field_defaults": {
+        "name": "venue_name",
+        "address": "venue_address",
+        "contact_phone": "venue_phone",
+        "room": "holding_room"
+      },
       "note": "Venue provides tables and chairs, power, and dimmable lighting where the variation needs it."
     },
     {
@@ -295,6 +301,12 @@
         "consent_status",
         "arrival_time"
       ],
+      "field_defaults": {
+        "org_name": "beneficiary_org",
+        "contact_name": "beneficiary_contact_name",
+        "child_count": "beneficiaries",
+        "chaperone_count": "chaperones"
+      },
       "note": "The partner organization coordinates arrival, consent, chaperones and transport. Arrival is timed to minute 35 regardless of scale."
     },
     {

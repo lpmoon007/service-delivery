@@ -211,6 +211,12 @@
         "floor_notes",
         "av_notes"
       ],
+      "field_defaults": {
+        "name": "venue_name",
+        "address": "venue_address",
+        "contact_phone": "venue_phone",
+        "room": "holding_room"
+      },
       "note": "Children may want to try the boards. Confirm whether riding indoors is permitted and where."
     },
     {
@@ -227,7 +233,12 @@
         "chaperone_count",
         "consent_status",
         "arrival_time"
-      ]
+      ],
+      "field_defaults": {
+        "org_name": "beneficiary_org",
+        "contact_name": "beneficiary_contact_name",
+        "child_count": "beneficiaries"
+      }
     },
     {
       "key": "child_transport",

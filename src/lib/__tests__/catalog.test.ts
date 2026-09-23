@@ -145,6 +145,26 @@ describe.each(PROGRAMS.map((p) => [p.code, p] as const))("%s", (code, program) =
     }
   });
 
+  it("maps every field default to a declared field and a real input", () => {
+    // A mapping to a field the resource does not declare would never render,
+    // and a mapping to a name nothing provides fails silently. Both are typos
+    // that would only show up as an empty cell in a coordination doc.
+    const names = new Set<string>([
+      ...program.parameters.map((q) => q.key),
+      ...Object.keys(program.derived ?? {}),
+      // Set on the engagement row rather than declared as a parameter.
+      "client",
+      "venue_name",
+      "venue_address",
+    ]);
+    for (const r of program.resources) {
+      for (const [field, formula] of Object.entries(r.field_defaults ?? {})) {
+        expect(r.fields ?? [], `${code}: ${r.key} has no field "${field}"`).toContain(field);
+        expect(names, `${code}: ${r.key}.${field} reads unknown "${formula}"`).toContain(formula);
+      }
+    }
+  });
+
   it.each([90, 120, 180])("fits a %i-minute session exactly", (minutes) => {
     const ros = generateEngagement(program, { ...params, session_minutes: minutes }, "2026-11-10")
       .runOfShow;

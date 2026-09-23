@@ -13,11 +13,18 @@ export function ResourceEditor({
   engagementId,
   resource,
   fieldNames,
+  derived = {},
 }: {
   engagementId: string;
   resource: EngagementResourceRow;
   /** Field list from the program template, so the form matches the program. */
   fieldNames: string[];
+  /**
+   * Values the engagement already knows, by field name. Rendered as the input's
+   * placeholder so the coordinator can see the answer is on file without a copy
+   * of it being saved here as well.
+   */
+  derived?: Record<string, string>;
 }) {
   const { pending, result, run } = useAction();
   const values = resource.fields ?? {};
@@ -39,7 +46,15 @@ export function ResourceEditor({
           {fieldNames.map((f) => (
             <label key={f}>
               <span>{labelize(f)}</span>
-              <input name={`field.${f}`} defaultValue={values[f] ?? ""} disabled={pending} />
+              <input
+                name={`field.${f}`}
+                defaultValue={values[f] ?? ""}
+                placeholder={derived[f] ?? ""}
+                disabled={pending}
+              />
+              {derived[f] && !values[f] && (
+                <span className="det">From the engagement. Type here only to override it.</span>
+              )}
             </label>
           ))}
           <label>

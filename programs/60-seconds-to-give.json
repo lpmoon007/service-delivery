@@ -168,7 +168,12 @@
         "room",
         "stage_notes",
         "av_notes"
-      ]
+      ],
+      "field_defaults": {
+        "name": "venue_name",
+        "address": "venue_address",
+        "contact_phone": "venue_phone"
+      }
     },
     {
       "key": "av_and_staging",

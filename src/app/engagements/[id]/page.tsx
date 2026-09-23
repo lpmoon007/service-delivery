@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CoordinationDoc } from "@/components/CoordinationDoc";
 import { currentProfile, getEngagement } from "@/lib/db";
 import { isSupabaseConfigured } from "@/lib/env";
+import { derivedResourceValues } from "@/lib/generate";
 import { findEngagement, generated } from "@/fixtures/registry";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,14 @@ export default async function EngagementPage({
   if (!isSupabaseConfigured) {
     const fixture = findEngagement(id);
     if (!fixture) notFound();
+    const g = generated(fixture);
     return (
       <CoordinationDoc
-        engagement={generated(fixture)}
-        resourceValues={fixture.resourceValues}
+        engagement={g}
+        resourceValues={{
+          ...derivedResourceValues(g.resources),
+          ...fixture.resourceValues,
+        }}
         costs={fixture.costs}
         audience="contractor"
       />
